@@ -395,16 +395,38 @@
     <script src="questions/en/questions_tomato.js"></script>
 
     <script>
+        // ========== GOOGLE APPS SCRIPT URL ==========
+        // VLOZ SVE URL z Google Apps Script deploymentu:
+        const SCRIPT_URL = 'VLOZ_APPS_SCRIPT_URL';
+
         // ========== API HELPER ==========
-        async function api(method, url, body) {
+        async function api(action, data) {
+            if (SCRIPT_URL === 'VLOZ_APPS_SCRIPT_URL') {
+                console.warn('Apps Script URL not set - data saved locally only');
+                return { ok: true, offline: true };
+            }
             try {
-                const opts = { method, headers: { 'Content-Type': 'application/json' } };
-                if (body) opts.body = JSON.stringify(body);
-                const res = await fetch(url, opts);
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ action, ...data })
+                });
                 return await res.json();
             } catch (e) {
-                console.error('API error:', method, url, e);
-                return { error: e.message };
+                console.error('API error:', action, e);
+                return { ok: true, offline: true };
+            }
+        }
+
+        async function apiGet(params) {
+            if (SCRIPT_URL === 'VLOZ_APPS_SCRIPT_URL') return { available: true };
+            try {
+                const url = SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+                const res = await fetch(url);
+                return await res.json();
+            } catch (e) {
+                console.error('API GET error:', e);
+                return { available: true };
             }
         }
 
@@ -484,7 +506,7 @@
             }
 
             // Check name availability on server
-            const check = await api('GET', '/api/check-name/' + encodeURIComponent(userName));
+            const check = await apiGet({ action: 'checkName', name: userName });
             if (!check.available) {
                 nameError.textContent = '⚠️ This name is already taken. Please choose another name.';
                 nameError.style.display = 'block';
@@ -497,7 +519,7 @@
 
             // Register participant on server
             uniqueId = generateUniqueId();
-            const reg = await api('POST', '/api/participants', { uniqueId, name: userName });
+            const reg = await api('register', { uniqueId, name: userName });
             if (reg.error) {
                 nameError.textContent = '⚠️ Error: ' + reg.error;
                 nameError.style.display = 'block';
@@ -693,7 +715,7 @@
             document.getElementById('answeredCount').textContent = answers.length;
 
             // Send answer to server (fire and forget)
-            api('POST', '/api/answers', {
+            api('answer', {
                 participantId: uniqueId,
                 answerIndex: answerData.answerId,
                 timestamp: answerData.timestamp,
@@ -813,7 +835,8 @@
             const accuracy = answers.length > 0 ? Math.round(totalCorrect / answers.length * 100) : 0;
             const avgTime = answers.length > 0 ? Math.round(answers.reduce((a, b) => a + b.responseTimeMs, 0) / answers.length / 1000 * 10) / 10 : 0;
 
-            api('PUT', '/api/participants/' + uniqueId, {
+            api('progress', {
+                uniqueId,
                 duration, total: answers.length, correct: totalCorrect,
                 accuracy, avgTime, levelsCompleted: unlockedIndex, finished
             });
@@ -963,7 +986,7 @@
             const peouMean = Math.round((values.peou1 + values.peou2 + values.peou3 + values.peou4) / 4 * 100) / 100;
             const engMean = Math.round((values.eng1 + values.eng2 + values.eng3 + values.eng4 + values.eng5) / 5 * 100) / 100;
 
-            await api('POST', '/api/surveys', {
+            await api('survey', {
                 participantId: uniqueId,
                 ...values,
                 susScore, puMean, peouMean, engMean,
