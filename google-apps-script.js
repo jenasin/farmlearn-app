@@ -46,7 +46,9 @@ function doPost(e) {
     var data = JSON.parse(e.postData.contents);
     var action = data.action;
 
-    if (action === 'register') {
+    if (action === 'checkName') {
+      return checkName(data.name);
+    } else if (action === 'register') {
       return register(data);
     } else if (action === 'answer') {
       return saveAnswer(data);
@@ -60,16 +62,6 @@ function doPost(e) {
   } catch (err) {
     return jsonResponse({ error: err.toString() });
   }
-}
-
-function doGet(e) {
-  var action = e.parameter.action;
-
-  if (action === 'checkName') {
-    return checkName(e.parameter.name);
-  }
-
-  return jsonResponse({ error: 'Unknown GET action' });
 }
 
 function checkName(name) {

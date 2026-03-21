@@ -397,14 +397,10 @@
     <script>
         // ========== GOOGLE APPS SCRIPT URL ==========
         // VLOZ SVE URL z Google Apps Script deploymentu:
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyTHB6ufdFnnLJ6yzmqK6p2LWOoWP5_kRRPlZHf9V9360miLlzRfbUwZ4bBdOWP2Hc/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyxFMoY5-_cGLBF29SsiqtsG4ON4VssQwdbdEswFxxrSKA6KaE2lRjTNNga-LMN4p4/exec';
 
         // ========== API HELPER ==========
         async function api(action, data) {
-            if (SCRIPT_URL === 'VLOZ_APPS_SCRIPT_URL') {
-                console.warn('Apps Script URL not set - data saved locally only');
-                return { ok: true, offline: true };
-            }
             try {
                 const res = await fetch(SCRIPT_URL, {
                     method: 'POST',
@@ -415,18 +411,6 @@
             } catch (e) {
                 console.error('API error:', action, e);
                 return { ok: true, offline: true };
-            }
-        }
-
-        async function apiGet(params) {
-            if (SCRIPT_URL === 'VLOZ_APPS_SCRIPT_URL') return { available: true };
-            try {
-                const url = SCRIPT_URL + '?' + new URLSearchParams(params).toString();
-                const res = await fetch(url);
-                return await res.json();
-            } catch (e) {
-                console.error('API GET error:', e);
-                return { available: true };
             }
         }
 
@@ -506,7 +490,7 @@
             }
 
             // Check name availability on server
-            const check = await apiGet({ action: 'checkName', name: userName });
+            const check = await api('checkName', { name: userName });
             if (!check.available) {
                 nameError.textContent = '⚠️ This name is already taken. Please choose another name.';
                 nameError.style.display = 'block';
