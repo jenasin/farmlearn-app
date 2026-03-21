@@ -165,33 +165,51 @@
     </style>
 </head>
 <body>
-    <!-- START SCREEN -->
+    <!-- INTRO/WELCOME SCREEN -->
     <div id="startScreen" class="screen active">
-        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:24px;">
-            <div style="text-align:center; margin-bottom:32px;">
-                <div class="icon">🌱</div>
-                <h1 style="color:#16a34a; font-size:32px;">FarmLearn</h1>
-                <p style="color:#666;">Learn Farming</p>
-            </div>
-            <div class="card">
-                <div style="font-weight:bold; margin-bottom:12px;">👤 Your name:</div>
-                <input type="text" id="nameInput" placeholder="Enter your name..." minlength="2" required inputmode="text" autocomplete="off" autocapitalize="words">
-                <div id="nameError" style="color:#ff4b4b; font-size:14px; margin-top:8px; display:none;">
-                    ⚠️ Please enter your name (at least 2 characters)
+        <div style="flex:1; overflow-y:auto; padding:16px;">
+            <div style="max-width:600px; margin:0 auto;">
+                <div style="text-align:center; padding:20px; background:linear-gradient(135deg,#166534,#15803d); border-radius:16px; color:white; margin-bottom:20px;">
+                    <div style="font-size:13px; opacity:0.9;">Czech University of Life Sciences Prague</div>
+                    <div style="font-size:18px; font-weight:700;">Faculty of Tropical AgriSciences</div>
+                    <div style="font-size:12px; opacity:0.8; margin-top:4px;">Department of Sustainable Technologies</div>
                 </div>
-            </div>
-            <div class="card" style="margin:16px;">
-                <div style="font-weight:bold; margin-bottom:12px;">⏱️ Test duration:</div>
-                <div style="display:flex; gap:8px;">
-                    <button class="time-btn" onclick="setTestTime(3)" data-time="3">3 min</button>
-                    <button class="time-btn selected" onclick="setTestTime(5)" data-time="5">5 min</button>
-                    <button class="time-btn" onclick="setTestTime(10)" data-time="10">10 min</button>
-                    <button class="time-btn" onclick="setTestTime(15)" data-time="15">15 min</button>
+
+                <div class="card">
+                    <div style="text-align:center; margin-bottom:16px;">
+                        <div style="font-size:48px;">🌱</div>
+                        <h1 style="color:#16a34a; font-size:28px;">FarmLearn Study</h1>
+                        <p style="color:#666;">Gamified Agricultural Education Research</p>
+                    </div>
+
+                    <h3 style="color:#166534; margin-bottom:8px;">What will you do?</h3>
+                    <ol style="padding-left:24px; margin-bottom:16px; color:#374151;">
+                        <li style="margin-bottom:6px;"><strong>Fill in basic info</strong> about yourself (2 min)</li>
+                        <li style="margin-bottom:6px;"><strong>Try the FarmLearn app</strong> - play through farming quiz levels (15 min)</li>
+                        <li style="margin-bottom:6px;"><strong>Tell us what you think</strong> - short questionnaire (5 min)</li>
+                    </ol>
+                    <p style="color:#374151;"><strong>Total time:</strong> approximately 20-25 minutes.</p>
+                    <p style="color:#666; margin-top:8px;">Your responses are <strong>anonymous</strong> and used only for research.</p>
+
+                    <div style="display:flex; gap:12px; align-items:flex-start; padding:14px; background:#fef3c7; border-radius:12px; margin:16px 0; border:2px solid #f59e0b;">
+                        <input type="checkbox" id="consentCheck" style="width:22px; height:22px; margin-top:2px; flex-shrink:0; accent-color:#16a34a;">
+                        <label for="consentCheck" style="font-size:14px; color:#374151;">I understand the purpose of this study and I voluntarily agree to participate. I can withdraw at any time.</label>
+                    </div>
+
+                    <div style="font-weight:bold; margin-bottom:8px;">👤 Your name:</div>
+                    <input type="text" id="nameInput" placeholder="Enter your name..." minlength="2" required inputmode="text" autocomplete="off" autocapitalize="words">
+                    <div id="nameError" style="color:#ff4b4b; font-size:14px; margin-top:8px; display:none;"></div>
+
+                    <div style="margin-top:16px; font-weight:bold; margin-bottom:8px;">⏱️ Test duration:</div>
+                    <div style="display:flex; gap:8px; margin-bottom:16px;">
+                        <button class="time-btn" onclick="setTestTime(3)" data-time="3">3 min</button>
+                        <button class="time-btn selected" onclick="setTestTime(5)" data-time="5">5 min</button>
+                        <button class="time-btn" onclick="setTestTime(10)" data-time="10">10 min</button>
+                        <button class="time-btn" onclick="setTestTime(15)" data-time="15">15 min</button>
+                    </div>
+
+                    <button class="btn btn-green" onclick="startTest()">START</button>
                 </div>
-            </div>
-            <div style="padding:0 16px;">
-                <button class="btn btn-green" onclick="startTest()">🚀 START TEST</button>
-                <p style="text-align:center; color:#888; margin-top:12px;">📚 15 Levels</p>
             </div>
         </div>
     </div>
@@ -548,10 +566,16 @@
 
         // ========== START TEST ==========
         function startTest() {
-            userName = document.getElementById('nameInput').value.trim();
             const nameError = document.getElementById('nameError');
             const nameInput = document.getElementById('nameInput');
 
+            if (!document.getElementById('consentCheck').checked) {
+                nameError.textContent = '⚠️ Please check the consent box to continue.';
+                nameError.style.display = 'block';
+                return;
+            }
+
+            userName = nameInput.value.trim();
             if (!userName || userName.length < 2) {
                 nameError.textContent = '⚠️ Please enter your name (at least 2 characters)';
                 nameError.style.display = 'block';
