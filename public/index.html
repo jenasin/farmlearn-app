@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FarmLearn - Learn Farming</title>
+    <meta name="theme-color" content="#16a34a">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Nunito', 'Segoe UI', Tahoma, sans-serif; }
+        input, textarea {
+            touch-action: manipulation !important;
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            pointer-events: auto !important;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        body { background: linear-gradient(to bottom, #f0fdf4, #dcfce7); min-height: 100vh; }
+        .screen { display: none; min-height: 100vh; }
+        .screen.active { display: flex; flex-direction: column; }
+
+        .btn {
+            padding: 16px 24px;
+            border: none;
+            border-radius: 16px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            margin: 6px 0;
+            transition: all 0.1s ease;
+            position: relative;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-green {
+            background: #58cc02;
+            color: white;
+            border-bottom: 4px solid #58a700;
+        }
+        .btn-green:hover { background: #61d802; }
+        .btn-green:active {
+            transform: translateY(4px);
+            border-bottom-width: 0;
+        }
+
+        .btn-answer {
+            width: 100%;
+            padding: 18px 20px;
+            background: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #333;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            margin-bottom: 12px;
+            text-transform: none;
+            transition: transform 0.05s ease, box-shadow 0.1s ease, background 0.2s;
+        }
+        .btn-answer:hover { background: #f8fafc; box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
+        .btn-answer:active { transform: scale(0.98); }
+        .btn-answer.correct { background: #e7ffdd !important; box-shadow: 0 0 0 2px #6ed94a inset; color: #246b1d; }
+        .btn-answer.wrong { background: #ffe4e4 !important; box-shadow: 0 0 0 2px #ff6b6b inset; color: #a82424; }
+
+        .level-btn {
+            width: 100%; padding: 18px 20px; border: none; border-radius: 24px;
+            font-size: 18px; font-weight: 700; cursor: pointer; display: flex;
+            align-items: center; gap: 16px; margin-bottom: 12px;
+            transition: transform 0.1s ease, filter 0.1s ease;
+            position: relative; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .level-btn .level-icon { font-size: 44px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+        .level-btn .level-info { flex: 1; text-align: left; }
+        .level-btn .level-name { font-size: 20px; font-weight: 800; }
+        .level-btn .level-subtitle { font-size: 14px; opacity: 0.9; font-weight: 600; }
+        .level-btn .level-arrow { font-size: 24px; opacity: 0.8; }
+        .level-btn:hover { filter: brightness(1.05); }
+        .level-btn:active { transform: translateY(6px) scale(0.98); border-bottom-width: 0 !important; filter: brightness(0.95); }
+        @keyframes btnPress { 0%{transform:translateY(0) scale(1)} 50%{transform:translateY(6px) scale(0.97)} 100%{transform:translateY(0) scale(1)} }
+        .level-btn.pressed { animation: btnPress 0.15s ease-out; }
+        .level-btn.unlocked { border-bottom: 6px solid rgba(0,0,0,0.25); }
+        .level-btn.locked { background: linear-gradient(180deg, #e0e0e0 0%, #b8b8b8 100%) !important; border-bottom: 6px solid #8a8a8a; cursor: not-allowed; opacity: 0.75; }
+        .level-btn.locked:hover { filter: none; }
+        .level-btn.locked:active { transform: none; border-bottom-width: 6px !important; }
+        .level-btn.locked .level-icon { filter: grayscale(1) opacity(0.6); }
+        .level-btn.completed { background: linear-gradient(180deg, #58cc02 0%, #46a302 100%) !important; border-bottom: 6px solid #2d6a00; }
+
+        .header { background: #58cc02; color: white; padding: 16px; }
+        .card { background: white; border-radius: 24px; padding: 24px; margin: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: none; }
+        .question-card { background: white; border-radius: 24px; padding: 20px 24px; margin: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .question-card h2 { font-size: 22px; color: #1a1a1a; line-height: 1.4; }
+
+        input[type="text"] { width: 100%; padding: 16px 20px; font-size: 18px; border: none; border-radius: 16px; background: #f7f7f7; box-shadow: 0 2px 4px rgba(0,0,0,0.04) inset; }
+        #nameInput { pointer-events: auto !important; touch-action: manipulation !important; -webkit-user-select: text !important; user-select: text !important; z-index: 9999 !important; position: relative; }
+        input[type="text"]:focus { outline: none; background: #fff; box-shadow: 0 0 0 3px rgba(88,204,2,0.3); }
+
+        .timer { font-size: 32px; font-weight: bold; font-family: 'Courier New', monospace; }
+        .time-btn { flex: 1; padding: 12px 8px; border: 2px solid #e5e7eb; border-radius: 12px; background: white; font-size: 16px; font-weight: 700; color: #666; cursor: pointer; transition: all 0.2s; }
+        .time-btn:hover { border-color: #58cc02; color: #58cc02; }
+        .time-btn.selected { background: #58cc02; border-color: #58cc02; color: white; }
+
+        .progress { height: 10px; background: #e5e7eb; border-radius: 5px; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #58cc02, #78e007); transition: width 0.3s; border-radius: 5px; }
+        .icon { font-size: 48px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+        .stat-box { background: white; padding: 16px; border-radius: 12px; text-align: center; border: 2px solid #e5e7eb; }
+        .stat-num { font-size: 24px; font-weight: bold; color: #1cb0f6; }
+
+        .log-item { padding: 8px; border-radius: 8px; margin: 4px 0; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+        .log-item.correct { background: #d7ffb8; }
+        .log-item.wrong { background: #ffdfe0; }
+
+        .level-complete-screen { min-height: 100vh; display: flex; flex-direction: column; }
+        .level-complete-screen.success { background: #f0fdf4; }
+        .level-complete-screen.fail { background: #fff7f7; }
+        .lc-header { padding: 48px 24px 32px; text-align: center; border-radius: 0 0 32px 32px; position: relative; }
+        .lc-header.success { background: linear-gradient(180deg, #58cc02 0%, #46a302 100%); }
+        .lc-header.fail { background: linear-gradient(180deg, #ff4b4b 0%, #d73c3c 100%); }
+        .lc-emoji { font-size: 72px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2)); animation: lcBounce 0.6s ease-out; }
+        @keyframes lcBounce { 0%{transform:scale(0) rotate(-10deg)} 50%{transform:scale(1.2) rotate(5deg)} 100%{transform:scale(1) rotate(0)} }
+        .lc-progress-ring { display: inline-block; position: relative; width: 120px; height: 120px; margin: 16px 0; }
+        .lc-progress-ring svg { transform: rotate(-90deg); }
+        .lc-progress-ring circle { fill: none; stroke-width: 10; }
+        .lc-progress-ring .bg { stroke: rgba(255,255,255,0.3); }
+        .lc-progress-ring .progress { stroke: white; stroke-linecap: round; transition: stroke-dashoffset 1s ease-out; }
+        .lc-progress-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 32px; font-weight: 800; color: white; }
+        .lc-score { font-size: 18px; color: rgba(255,255,255,0.9); font-weight: 600; }
+        .lc-title { font-size: 24px; font-weight: 800; color: white; margin-top: 12px; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .lc-card { background: white; border-radius: 24px; padding: 24px; margin: -24px 16px 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); text-align: center; position: relative; z-index: 10; }
+        .lc-card-icon { font-size: 48px; margin-bottom: 12px; }
+        .lc-card-title { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+        .lc-card-title.success { color: #58cc02; }
+        .lc-card-title.fail { color: #ff4b4b; }
+        .lc-card-text { font-size: 16px; color: #666; line-height: 1.5; }
+        .lc-buttons { padding: 16px; margin-top: auto; }
+        .lc-btn { width: 100%; padding: 18px 24px; border: none; border-radius: 16px; font-size: 18px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: transform 0.1s ease, filter 0.1s ease; margin-bottom: 12px; }
+        .lc-btn:active { transform: translateY(4px); border-bottom-width: 0 !important; }
+        .lc-btn-primary.success { background: #58cc02; color: white; border-bottom: 4px solid #46a302; }
+        .lc-btn-primary.fail { background: #ffc800; color: #1a1a1a; border-bottom: 4px solid #cca000; }
+        .lc-btn-secondary { background: #e5e5e5; color: #666; border-bottom: 4px solid #c4c4c4; }
+        .lc-btn:hover { filter: brightness(1.05); }
+
+        .survey-q { background:#fff; border-radius:12px; padding:14px; margin-bottom:10px; border:2px solid #e5e7eb; }
+        .survey-q.error { border-color:#ef4444; }
+        .survey-q label { display:block; font-size:14px; font-weight:600; color:#333; margin-bottom:8px; }
+        .survey-scale { display:flex; gap:8px; justify-content:center; }
+        .survey-scale button { width:40px; height:40px; border-radius:50%; border:2px solid #d1d5db; background:#fff; font-size:16px; font-weight:700; cursor:pointer; transition:all 0.2s; }
+        .survey-scale button.selected { background:#16a34a; color:#fff; border-color:#16a34a; transform:scale(1.15); }
+        .survey-scale button:hover { border-color:#16a34a; }
+    </style>
+</head>
+<body>
+    <!-- START SCREEN -->
+    <div id="startScreen" class="screen active">
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:24px;">
+            <div style="text-align:center; margin-bottom:32px;">
+                <div class="icon">🌱</div>
+                <h1 style="color:#16a34a; font-size:32px;">FarmLearn</h1>
+                <p style="color:#666;">Learn Farming</p>
+            </div>
+            <div class="card">
+                <div style="font-weight:bold; margin-bottom:12px;">👤 Your name:</div>
+                <input type="text" id="nameInput" placeholder="Enter your name..." minlength="2" required inputmode="text" autocomplete="off" autocapitalize="words">
+                <div id="nameError" style="color:#ff4b4b; font-size:14px; margin-top:8px; display:none;">
+                    ⚠️ Please enter your name (at least 2 characters)
+                </div>
+            </div>
+            <div class="card" style="margin:16px;">
+                <div style="font-weight:bold; margin-bottom:12px;">⏱️ Test duration:</div>
+                <div style="display:flex; gap:8px;">
+                    <button class="time-btn" onclick="setTestTime(3)" data-time="3">3 min</button>
+                    <button class="time-btn selected" onclick="setTestTime(5)" data-time="5">5 min</button>
+                    <button class="time-btn" onclick="setTestTime(10)" data-time="10">10 min</button>
+                    <button class="time-btn" onclick="setTestTime(15)" data-time="15">15 min</button>
+                </div>
+            </div>
+            <div style="padding:0 16px;">
+                <button class="btn btn-green" onclick="startTest()">🚀 START TEST</button>
+                <p style="text-align:center; color:#888; margin-top:12px;">📚 15 Levels</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODULES SCREEN -->
+    <div id="modulesScreen" class="screen">
+        <div class="header">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-weight:bold;" id="displayName">Farmer</div>
+                    <div style="font-size:14px; opacity:0.8;"><span id="answeredCount">0</span> questions</div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="timer" id="timerDisplay">5:00</div>
+                    <div style="font-size:12px; opacity:0.8;">remaining</div>
+                </div>
+            </div>
+            <div style="margin-top:12px;">
+                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                    <span>⏱️ Time</span>
+                    <span>📊 Progress: <span id="levelProgressText">0/15</span></span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar" id="timeProgress" style="width:0%"></div>
+                </div>
+                <div class="progress" style="margin-top:6px; background:#fef3c7;">
+                    <div class="progress-bar" id="levelProgress" style="width:0%; background:linear-gradient(90deg, #ffc800, #ff9600);"></div>
+                </div>
+            </div>
+        </div>
+        <div style="flex:1; padding:16px; overflow-y:auto;">
+            <h2 style="text-align:center; margin-bottom:8px; color:#333;">Choose Level</h2>
+            <p style="text-align:center; color:#888; font-size:14px; margin-bottom:16px;">Complete 80% to unlock next level</p>
+            <div id="modulesContainer"></div>
+        </div>
+        <div style="padding:16px;">
+            <button class="btn" style="background:#fee2e2; color:#dc2626;" onclick="endTest()">🛑 End Test</button>
+        </div>
+    </div>
+
+    <!-- QUIZ SCREEN -->
+    <div id="quizScreen" class="screen">
+        <div class="header" id="quizHeader">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <button onclick="renderModules(); showScreen('modulesScreen')" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">✕</button>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span id="moduleIcon">🫘</span>
+                    <span style="font-weight:bold;">L<span id="levelNum">1</span></span>
+                </div>
+                <div class="timer" id="quizTimer" style="font-size:24px;">5:00</div>
+            </div>
+            <div class="progress">
+                <div class="progress-bar" id="questionProgress" style="width:20%"></div>
+            </div>
+        </div>
+        <div style="flex:1; padding:0 16px; overflow-y:auto; padding-bottom:120px;">
+            <div class="question-card">
+                <div style="display:flex; gap:14px; align-items:flex-start;">
+                    <span id="questionIcon" style="font-size:36px;">🫘</span>
+                    <h2 id="questionText" style="flex:1;"></h2>
+                </div>
+            </div>
+            <div id="answersContainer" style="padding:0 8px;"></div>
+        </div>
+    </div>
+
+    <!-- FEEDBACK OVERLAY -->
+    <div id="feedbackOverlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.3); z-index:998;" onclick="nextQuestion()"></div>
+
+    <!-- FEEDBACK POPUP -->
+    <div id="feedbackPanel" style="display:none; position:fixed; bottom:0; left:0; right:0; padding:20px; padding-bottom:max(20px, env(safe-area-inset-bottom)); border-radius:20px 20px 0 0; box-shadow:0 -4px 20px rgba(0,0,0,0.3); z-index:999; background:white;">
+        <div style="display:flex; gap:12px; align-items:center; margin-bottom:16px;">
+            <span id="feedbackIcon" style="font-size:48px;">🎉</span>
+            <div style="flex:1;">
+                <div id="feedbackTitle" style="font-size:22px; font-weight:bold;"></div>
+                <div id="feedbackText" style="color:#666; margin-top:4px; font-size:14px; max-height:60px; overflow-y:auto;"></div>
+            </div>
+        </div>
+        <button id="continueBtn" class="btn btn-green" onclick="nextQuestion()" style="font-size:20px; padding:18px;">→ CONTINUE</button>
+    </div>
+
+    <!-- RESULTS SCREEN -->
+    <div id="resultsScreen" class="screen">
+        <div id="resultsHeader" style="padding:32px; text-align:center; color:white;">
+            <div id="resultEmoji" style="font-size:64px;">🏆</div>
+            <div id="resultPercent" style="font-size:56px; font-weight:bold;">0%</div>
+            <div id="resultText">0/0 correct</div>
+        </div>
+        <div style="flex:1; padding:16px; overflow-y:auto;">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-num" id="statQuestions">0</div>
+                    <div style="color:#666; font-size:12px;">Questions</div>
+                </div>
+                <div class="stat-box" style="background:#f0fdf4;">
+                    <div class="stat-num" style="color:#16a34a;" id="statCorrect">0</div>
+                    <div style="color:#666; font-size:12px;">Correct</div>
+                </div>
+                <div class="stat-box" style="background:#fef3c7;">
+                    <div class="stat-num" style="color:#d97706;" id="statTime">0s</div>
+                    <div style="color:#666; font-size:12px;">Average</div>
+                </div>
+            </div>
+            <h3 style="margin:16px 0 8px; color:#333;">📋 Answer History</h3>
+            <div id="answersLog" style="max-height:200px; overflow-y:auto; background:#f9fafb; border-radius:12px; padding:8px;"></div>
+        </div>
+        <div style="padding:16px;">
+            <button class="btn btn-green" onclick="showScreen('surveyScreen')">📋 Fill Survey</button>
+            <button class="btn" style="background:#e0e7ff; color:#4338ca; margin-top:8px;" onclick="newTest()">🚀 New Test</button>
+        </div>
+    </div>
+
+    <!-- SURVEY SCREEN -->
+    <div id="surveyScreen" class="screen" style="background:#f0fdf4;">
+        <div style="background:linear-gradient(135deg,#166534,#15803d); color:white; padding:20px; text-align:center;">
+            <h2 style="margin:0;">FarmLearn Survey</h2>
+            <p style="opacity:0.9; margin:4px 0 0;">Please answer honestly - no right or wrong answers</p>
+        </div>
+        <div style="flex:1; overflow-y:auto; padding:16px;">
+            <div id="surveyForm" style="max-width:500px; margin:0 auto;">
+                <h3 style="color:#166534; margin:0 0 12px;">Usability</h3>
+                <p style="color:#888; font-size:13px; margin-bottom:12px;">1 = Strongly Disagree, 5 = Strongly Agree</p>
+
+                <div class="survey-q" data-name="sus1"><label>1. I think I would like to use FarmLearn frequently.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="sus2"><label>2. I found FarmLearn unnecessarily complex.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="sus3"><label>3. I thought FarmLearn was easy to use.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="sus4"><label>4. I think I would need help from someone to use FarmLearn.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="sus5"><label>5. I found the various functions were well integrated.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="sus6"><label>6. I thought there was too much inconsistency.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="sus7"><label>7. Most people would learn to use it very quickly.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="sus8"><label>8. I found FarmLearn very cumbersome to use.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="sus9"><label>9. I felt very confident using FarmLearn.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="sus10"><label>10. I needed to learn a lot before I could get going.</label><div class="survey-scale"></div></div>
+
+                <h3 style="color:#166534; margin:20px 0 12px;">Usefulness</h3>
+                <div class="survey-q" data-name="pu1"><label>1. FarmLearn would help farmers learn about crops more effectively.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="pu2"><label>2. Using FarmLearn would make it easier to acquire farming knowledge.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="pu3"><label>3. The content is relevant and useful for farming.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="pu4"><label>4. Overall, I find FarmLearn useful as a learning tool.</label><div class="survey-scale"></div></div>
+
+                <h3 style="color:#166534; margin:20px 0 12px;">Ease of Use</h3>
+                <div class="survey-q" data-name="peou1"><label>1. Learning to use FarmLearn was easy for me.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="peou2"><label>2. I find it easy to navigate through FarmLearn.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="peou3"><label>3. The interface is clear and understandable.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="peou4"><label>4. Overall, I find FarmLearn easy to use.</label><div class="survey-scale"></div></div>
+
+                <h3 style="color:#166534; margin:20px 0 12px;">Engagement</h3>
+                <div class="survey-q" data-name="eng1"><label>1. The game-like elements motivated me to continue.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="eng2"><label>2. The immediate feedback helped me learn.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="eng3"><label>3. The time limit added positive pressure.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="eng4"><label>4. I would recommend this app to farmers.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="eng5"><label>5. I learned new farming knowledge from this app.</label><div class="survey-scale"></div></div>
+
+                <h3 style="color:#166534; margin:20px 0 12px;">Your Thoughts</h3>
+                <textarea id="surveyLike" placeholder="What did you like most?" style="width:100%; padding:12px; border:2px solid #e5e7eb; border-radius:12px; font-size:15px; min-height:60px; resize:vertical; margin-bottom:12px;"></textarea>
+                <textarea id="surveyImprove" placeholder="What would you improve?" style="width:100%; padding:12px; border:2px solid #e5e7eb; border-radius:12px; font-size:15px; min-height:60px; resize:vertical;"></textarea>
+
+                <div id="surveyError" style="display:none; color:#ef4444; text-align:center; margin-top:12px; font-weight:600;">Please answer all scale questions.</div>
+                <button class="btn btn-green" onclick="submitSurvey()" style="margin-top:16px; width:100%;">SUBMIT SURVEY</button>
+                <button class="btn" onclick="showScreen('resultsScreen')" style="background:#e5e7eb; color:#666; margin-top:8px; width:100%;">Back to Results</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LEVEL COMPLETE SCREEN -->
+    <div id="levelCompleteScreen" class="screen level-complete-screen">
+        <div id="lcHeader" class="lc-header">
+            <div id="lcEmoji" class="lc-emoji">🎉</div>
+            <div class="lc-progress-ring">
+                <svg width="120" height="120">
+                    <circle class="bg" cx="60" cy="60" r="50"/>
+                    <circle id="lcProgressCircle" class="progress" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="314"/>
+                </svg>
+                <div id="lcPercent" class="lc-progress-text">0%</div>
+            </div>
+            <div id="lcScore" class="lc-score">0/5 correct</div>
+            <div id="lcTitle" class="lc-title">Congratulations!</div>
+        </div>
+        <div class="lc-card">
+            <div id="lcCardIcon" class="lc-card-icon">🏆</div>
+            <div id="lcCardTitle" class="lc-card-title">You did great!</div>
+            <div id="lcCardText" class="lc-card-text">Next level unlocked.</div>
+        </div>
+        <div style="flex:1;"></div>
+        <div class="lc-buttons">
+            <button id="lcBtnPrimary" class="lc-btn lc-btn-primary" onclick="continueToNext()">
+                ➡️ Continue
+            </button>
+            <button class="lc-btn lc-btn-secondary" onclick="renderModules(); showScreen('modulesScreen')">
+                📋 Level List
+            </button>
+        </div>
+    </div>
+
+    <!-- THANK YOU SCREEN -->
+    <div id="thankYouScreen" class="screen">
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:32px; text-align:center;">
+            <div style="font-size:80px; margin-bottom:24px;">🎉</div>
+            <h1 style="color:#16a34a; font-size:28px; margin-bottom:12px;">Thank You!</h1>
+            <p style="color:#666; font-size:18px; line-height:1.6; max-width:400px;">Your responses have been saved. Thank you for participating in the FarmLearn study!</p>
+            <button class="btn btn-green" onclick="newTest()" style="max-width:300px; margin-top:32px;">🚀 New Participant</button>
+        </div>
+    </div>
+
+    <!-- QUESTION DATA -->
+    <script src="questions/en/questions_beans.js"></script>
+    <script src="questions/en/questions_cashew.js"></script>
+    <script src="questions/en/questions_drought.js"></script>
+    <script src="questions/en/questions_maize.js"></script>
+    <script src="questions/en/questions_tomato.js"></script>
+
+    <script>
+        // ========== API HELPER ==========
+        async function api(method, url, body) {
+            try {
+                const opts = { method, headers: { 'Content-Type': 'application/json' } };
+                if (body) opts.body = JSON.stringify(body);
+                const res = await fetch(url, opts);
+                return await res.json();
+            } catch (e) {
+                console.error('API error:', method, url, e);
+                return { error: e.message };
+            }
+        }
+
+        // ========== STATE ==========
+        let userName = '';
+        let uniqueId = '';
+        let sessionStart = null;
+        let timerInterval = null;
+        let currentModule = null;
+        let currentLevel = 1;
+        let currentLevelIndex = 0;
+        let questions = [];
+        let questionIndex = 0;
+        let questionStart = null;
+        let answers = [];
+        let totalCorrect = 0;
+        let levelCorrect = 0;
+        let levelTotal = 0;
+        let SESSION_DURATION = 5 * 60;
+        const PASS_THRESHOLD = 80;
+        let unlockedIndex = 0;
+
+        const LEVELS = [
+            { module: 'beans', level: 1, name: 'Beans', icon: '🫘', color: '#f59e0b' },
+            { module: 'beans', level: 2, name: 'Beans', icon: '🫘', color: '#f59e0b' },
+            { module: 'beans', level: 3, name: 'Beans', icon: '🫘', color: '#f59e0b' },
+            { module: 'cashew', level: 1, name: 'Cashew', icon: '🥜', color: '#eab308' },
+            { module: 'cashew', level: 2, name: 'Cashew', icon: '🥜', color: '#eab308' },
+            { module: 'cashew', level: 3, name: 'Cashew', icon: '🥜', color: '#eab308' },
+            { module: 'drought', level: 1, name: 'Drought', icon: '🏜️', color: '#f97316' },
+            { module: 'drought', level: 2, name: 'Drought', icon: '🏜️', color: '#f97316' },
+            { module: 'drought', level: 3, name: 'Drought', icon: '🏜️', color: '#f97316' },
+            { module: 'maize', level: 1, name: 'Maize', icon: '🌽', color: '#facc15' },
+            { module: 'maize', level: 2, name: 'Maize', icon: '🌽', color: '#facc15' },
+            { module: 'maize', level: 3, name: 'Maize', icon: '🌽', color: '#facc15' },
+            { module: 'tomato', level: 1, name: 'Tomato', icon: '🍅', color: '#ef4444' },
+            { module: 'tomato', level: 2, name: 'Tomato', icon: '🍅', color: '#ef4444' },
+            { module: 'tomato', level: 3, name: 'Tomato', icon: '🍅', color: '#ef4444' }
+        ];
+
+        // ========== HELPERS ==========
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return m + ':' + (s < 10 ? '0' : '') + s;
+        }
+
+        function generateUniqueId() {
+            return 'u' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        }
+
+        function setTestTime(minutes) {
+            SESSION_DURATION = minutes * 60;
+            document.querySelectorAll('.time-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                if (parseInt(btn.dataset.time) === minutes) btn.classList.add('selected');
+            });
+            document.getElementById('timerDisplay').textContent = minutes + ':00';
+        }
+
+        // ========== START TEST ==========
+        async function startTest() {
+            userName = document.getElementById('nameInput').value.trim();
+            const nameError = document.getElementById('nameError');
+            const nameInput = document.getElementById('nameInput');
+
+            if (!userName || userName.length < 2) {
+                nameError.textContent = '⚠️ Please enter your name (at least 2 characters)';
+                nameError.style.display = 'block';
+                nameInput.style.borderColor = '#ff4b4b';
+                return;
+            }
+
+            // Check name availability on server
+            const check = await api('GET', '/api/check-name/' + encodeURIComponent(userName));
+            if (!check.available) {
+                nameError.textContent = '⚠️ This name is already taken. Please choose another name.';
+                nameError.style.display = 'block';
+                nameInput.style.borderColor = '#ff4b4b';
+                return;
+            }
+
+            nameError.style.display = 'none';
+            nameInput.style.borderColor = '#58cc02';
+
+            // Register participant on server
+            uniqueId = generateUniqueId();
+            const reg = await api('POST', '/api/participants', { uniqueId, name: userName });
+            if (reg.error) {
+                nameError.textContent = '⚠️ Error: ' + reg.error;
+                nameError.style.display = 'block';
+                return;
+            }
+
+            sessionStart = Date.now();
+            answers = [];
+            totalCorrect = 0;
+            unlockedIndex = 0;
+
+            document.getElementById('displayName').textContent = userName;
+            document.getElementById('answeredCount').textContent = '0';
+
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+            updateTimer();
+
+            renderModules();
+            showScreen('modulesScreen');
+        }
+
+        // ========== TIMER ==========
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+            const remaining = Math.max(0, SESSION_DURATION - elapsed);
+
+            document.getElementById('timerDisplay').textContent = formatTime(remaining);
+            document.getElementById('quizTimer').textContent = formatTime(remaining);
+            document.getElementById('timeProgress').style.width = (elapsed / SESSION_DURATION * 100) + '%';
+
+            if (remaining <= 60) document.getElementById('timerDisplay').style.color = '#fca5a5';
+            if (remaining <= 0) endTest();
+        }
+
+        // ========== MODULES ==========
+        function adjustColor(hex, amount) {
+            const num = parseInt(hex.replace('#', ''), 16);
+            const r = Math.max(0, Math.min(255, (num >> 16) + amount));
+            const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amount));
+            const b = Math.max(0, Math.min(255, (num & 0x0000FF) + amount));
+            return '#' + (0x1000000 + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
+
+        function renderModules() {
+            const container = document.getElementById('modulesContainer');
+            container.innerHTML = '';
+
+            LEVELS.forEach((lvl, idx) => {
+                const status = idx < unlockedIndex ? 'completed' : idx === unlockedIndex ? 'unlocked' : 'locked';
+                const btn = document.createElement('button');
+                btn.className = 'level-btn ' + status;
+
+                if (status === 'unlocked') {
+                    btn.style.background = `linear-gradient(180deg, ${lvl.color} 0%, ${adjustColor(lvl.color, -30)} 100%)`;
+                }
+
+                const statusText = status === 'completed' ? '✓ Completed' : status === 'unlocked' ? '▶ Click to start' : '🔒 Locked';
+                const arrow = status === 'locked' ? '🔒' : '›';
+
+                btn.innerHTML = `
+                    <span class="level-icon">${lvl.icon}</span>
+                    <div class="level-info">
+                        <div class="level-name">${lvl.name} - L${lvl.level}</div>
+                        <div class="level-subtitle">${statusText}</div>
+                    </div>
+                    <span class="level-arrow">${arrow}</span>
+                `;
+
+                if (status !== 'locked') {
+                    btn.onclick = () => {
+                        btn.classList.add('pressed');
+                        setTimeout(() => { btn.classList.remove('pressed'); startLevel(idx); }, 150);
+                    };
+                }
+                container.appendChild(btn);
+            });
+
+            const progressPercent = (unlockedIndex / LEVELS.length) * 100;
+            document.getElementById('levelProgress').style.width = progressPercent + '%';
+            document.getElementById('levelProgressText').textContent = unlockedIndex + '/' + LEVELS.length;
+
+            if (unlockedIndex >= LEVELS.length) {
+                const msg = document.createElement('div');
+                msg.style.cssText = 'text-align:center; padding:20px; color:#58cc02; font-size:20px; font-weight:bold;';
+                msg.innerHTML = '🎉 Congratulations! You completed all levels!';
+                container.appendChild(msg);
+            }
+        }
+
+        function startLevel(idx) {
+            const lvl = LEVELS[idx];
+            currentModule = lvl.module;
+            currentLevel = lvl.level;
+            currentLevelIndex = idx;
+            levelCorrect = 0;
+            levelTotal = 0;
+            loadLevel();
+        }
+
+        // ========== QUIZ ==========
+        let shuffledOptions = [];
+
+        function shuffleArray(arr) {
+            const shuffled = [...arr];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function loadLevel() {
+            const moduleData = {
+                'beans': window.beansQuestions,
+                'cashew': window.cashewQuestions,
+                'drought': window.droughtQuestions,
+                'maize': window.maizeQuestions,
+                'tomato': window.tomatoQuestions
+            };
+            const icons = { 'beans': '🫘', 'cashew': '🥜', 'drought': '🏜️', 'maize': '🌽', 'tomato': '🍅' };
+
+            const data = moduleData[currentModule];
+            const levelKey = currentModule + '_level' + currentLevel;
+            questions = data[levelKey] || [];
+
+            if (questions.length === 0) {
+                renderModules();
+                showScreen('modulesScreen');
+                return;
+            }
+
+            levelTotal = questions.length;
+            questionIndex = 0;
+            document.getElementById('moduleIcon').textContent = icons[currentModule];
+            document.getElementById('questionIcon').textContent = icons[currentModule];
+            document.getElementById('levelNum').textContent = currentLevel;
+
+            showQuestion();
+            showScreen('quizScreen');
+        }
+
+        function showQuestion() {
+            const q = questions[questionIndex];
+            document.getElementById('questionText').textContent = q.question;
+            document.getElementById('questionProgress').style.width = ((questionIndex + 1) / questions.length * 100) + '%';
+
+            document.getElementById('feedbackOverlay').style.display = 'none';
+            document.getElementById('feedbackPanel').style.display = 'none';
+
+            const container = document.getElementById('answersContainer');
+            container.innerHTML = '';
+            shuffledOptions = shuffleArray(q.options);
+
+            shuffledOptions.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-answer';
+                btn.innerHTML = (opt.icon ? '<span style="font-size:24px;">' + opt.icon + '</span>' : '') +
+                    '<span style="flex:1;">' + opt.text + '</span>';
+                btn.onclick = () => selectAnswer(i);
+                container.appendChild(btn);
+            });
+
+            questionStart = Date.now();
+        }
+
+        function selectAnswer(index) {
+            const q = questions[questionIndex];
+            const selectedOpt = shuffledOptions[index];
+            const isCorrect = selectedOpt.isCorrect;
+            const responseTime = Date.now() - questionStart;
+
+            const answerData = {
+                answerId: answers.length + 1,
+                timestamp: new Date().toISOString(),
+                sessionTimeMs: Date.now() - sessionStart,
+                module: currentModule,
+                moduleName: LEVELS[currentLevelIndex].name,
+                level: currentLevel,
+                questionIndex: questionIndex + 1,
+                questionTotal: questions.length,
+                questionText: q.question,
+                selectedAnswer: selectedOpt.text,
+                correctAnswer: shuffledOptions.find(o => o.isCorrect).text,
+                isCorrect: isCorrect,
+                responseTimeMs: responseTime,
+                responseTimeSec: Math.round(responseTime / 100) / 10
+            };
+
+            answers.push(answerData);
+
+            if (isCorrect) { totalCorrect++; levelCorrect++; }
+            document.getElementById('answeredCount').textContent = answers.length;
+
+            // Send answer to server (fire and forget)
+            api('POST', '/api/answers', {
+                participantId: uniqueId,
+                answerIndex: answerData.answerId,
+                timestamp: answerData.timestamp,
+                sessionTimeMs: answerData.sessionTimeMs,
+                module: answerData.module,
+                moduleName: answerData.moduleName,
+                level: answerData.level,
+                questionIndex: answerData.questionIndex,
+                questionTotal: answerData.questionTotal,
+                questionText: answerData.questionText,
+                selectedAnswer: answerData.selectedAnswer,
+                correctAnswer: answerData.correctAnswer,
+                isCorrect: answerData.isCorrect,
+                responseTimeMs: answerData.responseTimeMs,
+                responseTimeSec: answerData.responseTimeSec
+            });
+
+            // Show feedback
+            const btns = document.querySelectorAll('#answersContainer .btn-answer');
+            btns.forEach((btn, i) => {
+                btn.disabled = true;
+                if (shuffledOptions[i].isCorrect) btn.classList.add('correct');
+                else if (i === index) btn.classList.add('wrong');
+            });
+
+            document.getElementById('feedbackOverlay').style.display = 'block';
+            const panel = document.getElementById('feedbackPanel');
+            panel.style.display = 'block';
+            panel.style.background = isCorrect ? '#d7ffb8' : '#ffdfe0';
+            document.getElementById('feedbackIcon').textContent = isCorrect ? '🎉' : '😢';
+            document.getElementById('feedbackTitle').textContent = isCorrect ? 'Great job!' : 'Not quite right';
+            document.getElementById('feedbackTitle').style.color = isCorrect ? '#58cc02' : '#ff4b4b';
+            document.getElementById('feedbackText').textContent = q.explanation || '';
+
+            const continueBtn = document.getElementById('continueBtn');
+            continueBtn.style.background = isCorrect ? '#58cc02' : '#ff4b4b';
+            continueBtn.style.borderBottomColor = isCorrect ? '#58a700' : '#ea2b2b';
+        }
+
+        function nextQuestion() {
+            questionIndex++;
+            if (questionIndex >= questions.length) {
+                showLevelComplete();
+            } else {
+                showQuestion();
+            }
+        }
+
+        // ========== LEVEL COMPLETE ==========
+        function showLevelComplete() {
+            document.getElementById('feedbackOverlay').style.display = 'none';
+            document.getElementById('feedbackPanel').style.display = 'none';
+
+            const percent = Math.round(levelCorrect / levelTotal * 100);
+            const passed = percent >= PASS_THRESHOLD;
+            const needed = Math.ceil(levelTotal * PASS_THRESHOLD / 100);
+
+            document.getElementById('lcProgressCircle').style.strokeDashoffset = 314;
+
+            const screen = document.getElementById('levelCompleteScreen');
+            const header = document.getElementById('lcHeader');
+            const btn = document.getElementById('lcBtnPrimary');
+
+            if (passed) {
+                if (currentLevelIndex >= unlockedIndex) unlockedIndex = currentLevelIndex + 1;
+
+                screen.className = 'screen level-complete-screen success';
+                header.className = 'lc-header success';
+                btn.className = 'lc-btn lc-btn-primary success';
+                btn.innerHTML = '➡️ Continue';
+                btn.onclick = continueToNext;
+                document.getElementById('lcEmoji').textContent = '🎉';
+                document.getElementById('lcTitle').textContent = 'Congratulations! You passed!';
+                document.getElementById('lcCardIcon').textContent = '🏆';
+                document.getElementById('lcCardTitle').textContent = 'You did great!';
+                document.getElementById('lcCardTitle').className = 'lc-card-title success';
+                document.getElementById('lcCardText').textContent = 'Next level unlocked. Keep learning!';
+            } else {
+                screen.className = 'screen level-complete-screen fail';
+                header.className = 'lc-header fail';
+                btn.className = 'lc-btn lc-btn-primary fail';
+                btn.innerHTML = '🔄 Try Again';
+                btn.onclick = () => startLevel(currentLevelIndex);
+                document.getElementById('lcEmoji').textContent = '😢';
+                document.getElementById('lcTitle').textContent = "You didn't pass";
+                document.getElementById('lcCardIcon').textContent = '💪';
+                document.getElementById('lcCardTitle').textContent = "Don't give up!";
+                document.getElementById('lcCardTitle').className = 'lc-card-title fail';
+                document.getElementById('lcCardText').textContent =
+                    'You need ' + PASS_THRESHOLD + '% (' + needed + '/' + levelTotal + ') to pass. Try again!';
+            }
+
+            document.getElementById('lcPercent').textContent = percent + '%';
+            document.getElementById('lcScore').textContent = levelCorrect + '/' + levelTotal + ' correct';
+            setTimeout(() => {
+                document.getElementById('lcProgressCircle').style.strokeDashoffset = 314 - (percent / 100 * 314);
+            }, 100);
+
+            // Update server with progress
+            updateServerProgress(false);
+
+            showScreen('levelCompleteScreen');
+        }
+
+        function continueToNext() {
+            if (currentLevelIndex + 1 < LEVELS.length) {
+                startLevel(currentLevelIndex + 1);
+            } else {
+                renderModules();
+                showScreen('modulesScreen');
+            }
+        }
+
+        // ========== UPDATE SERVER ==========
+        function updateServerProgress(finished) {
+            const duration = Math.floor((Date.now() - sessionStart) / 1000);
+            const accuracy = answers.length > 0 ? Math.round(totalCorrect / answers.length * 100) : 0;
+            const avgTime = answers.length > 0 ? Math.round(answers.reduce((a, b) => a + b.responseTimeMs, 0) / answers.length / 1000 * 10) / 10 : 0;
+
+            api('PUT', '/api/participants/' + uniqueId, {
+                duration, total: answers.length, correct: totalCorrect,
+                accuracy, avgTime, levelsCompleted: unlockedIndex, finished
+            });
+        }
+
+        // ========== END TEST ==========
+        function endTest() {
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+
+            document.getElementById('feedbackOverlay').style.display = 'none';
+            document.getElementById('feedbackPanel').style.display = 'none';
+
+            updateServerProgress(true);
+
+            const accuracy = answers.length > 0 ? Math.round(totalCorrect / answers.length * 100) : 0;
+            const avgTime = answers.length > 0 ? Math.round(answers.reduce((a, b) => a + b.responseTimeMs, 0) / answers.length / 1000 * 10) / 10 : 0;
+
+            const header = document.getElementById('resultsHeader');
+            header.style.background = accuracy >= 70 ? '#58cc02' : accuracy >= 50 ? '#ffc800' : '#ff4b4b';
+            document.getElementById('resultEmoji').textContent = accuracy >= 70 ? '🏆' : accuracy >= 50 ? '✅' : '💪';
+            document.getElementById('resultPercent').textContent = accuracy + '%';
+            document.getElementById('resultText').textContent = totalCorrect + '/' + answers.length + ' correct';
+            document.getElementById('statQuestions').textContent = answers.length;
+            document.getElementById('statCorrect').textContent = totalCorrect;
+            document.getElementById('statTime').textContent = avgTime + 's';
+
+            renderAnswersLog();
+            showScreen('resultsScreen');
+        }
+
+        function renderAnswersLog() {
+            const container = document.getElementById('answersLog');
+            if (answers.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#888; padding:16px;">No answers</p>';
+                return;
+            }
+            container.innerHTML = answers.map((a, idx) => {
+                const time = a.responseTimeSec;
+                return `<div class="log-item ${a.isCorrect ? 'correct' : 'wrong'}" style="flex-wrap:wrap;">
+                    <span style="font-weight:bold; min-width:24px;">${idx + 1}.</span>
+                    <span>${a.moduleName} L${a.level}</span>
+                    <span>${a.isCorrect ? '✓' : '✗'}</span>
+                    <span style="color:#666; font-size:12px;">${time}s</span>
+                    <div style="width:100%; font-size:11px; color:#555; margin-top:4px; padding-left:24px;">${a.questionText.substring(0, 50)}${a.questionText.length > 50 ? '...' : ''}</div>
+                </div>`;
+            }).join('');
+        }
+
+        function newTest() {
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+
+            userName = '';
+            uniqueId = '';
+            sessionStart = null;
+            currentModule = null;
+            currentLevel = 1;
+            currentLevelIndex = 0;
+            questions = [];
+            questionIndex = 0;
+            questionStart = null;
+            answers = [];
+            totalCorrect = 0;
+            levelCorrect = 0;
+            levelTotal = 0;
+            unlockedIndex = 0;
+
+            document.getElementById('feedbackOverlay').style.display = 'none';
+            document.getElementById('feedbackPanel').style.display = 'none';
+            document.getElementById('nameInput').value = '';
+            document.getElementById('nameError').style.display = 'none';
+            document.getElementById('nameInput').style.borderColor = '';
+            document.getElementById('timerDisplay').textContent = '5:00';
+            document.getElementById('answeredCount').textContent = '0';
+
+            // Reset survey scales
+            initSurveyScales();
+
+            showScreen('startScreen');
+        }
+
+        // ========== SURVEY ==========
+        function initSurveyScales() {
+            document.querySelectorAll('.survey-scale').forEach(scale => {
+                scale.innerHTML = '';
+                for (let i = 1; i <= 5; i++) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.textContent = i;
+                    btn.onclick = function() {
+                        scale.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+                        btn.classList.add('selected');
+                        scale.closest('.survey-q').classList.remove('error');
+                    };
+                    scale.appendChild(btn);
+                }
+            });
+            // Reset textareas
+            const like = document.getElementById('surveyLike');
+            const improve = document.getElementById('surveyImprove');
+            if (like) like.value = '';
+            if (improve) improve.value = '';
+        }
+
+        function getSurveyValue(name) {
+            const q = document.querySelector('.survey-q[data-name="' + name + '"]');
+            if (!q) return null;
+            const sel = q.querySelector('.survey-scale button.selected');
+            return sel ? parseInt(sel.textContent) : null;
+        }
+
+        async function submitSurvey() {
+            const scaleNames = [
+                'sus1','sus2','sus3','sus4','sus5','sus6','sus7','sus8','sus9','sus10',
+                'pu1','pu2','pu3','pu4',
+                'peou1','peou2','peou3','peou4',
+                'eng1','eng2','eng3','eng4','eng5'
+            ];
+
+            const values = {};
+            let allAnswered = true;
+
+            scaleNames.forEach(name => {
+                const val = getSurveyValue(name);
+                values[name] = val;
+                if (val === null) {
+                    allAnswered = false;
+                    const q = document.querySelector('.survey-q[data-name="' + name + '"]');
+                    if (q) q.classList.add('error');
+                }
+            });
+
+            if (!allAnswered) {
+                document.getElementById('surveyError').style.display = 'block';
+                const firstError = document.querySelector('.survey-q.error');
+                if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            document.getElementById('surveyError').style.display = 'none';
+
+            // Calculate SUS score
+            const susScore = ((values.sus1 - 1) + (5 - values.sus2) + (values.sus3 - 1) + (5 - values.sus4) +
+                (values.sus5 - 1) + (5 - values.sus6) + (values.sus7 - 1) + (5 - values.sus8) +
+                (values.sus9 - 1) + (5 - values.sus10)) * 2.5;
+
+            const puMean = Math.round((values.pu1 + values.pu2 + values.pu3 + values.pu4) / 4 * 100) / 100;
+            const peouMean = Math.round((values.peou1 + values.peou2 + values.peou3 + values.peou4) / 4 * 100) / 100;
+            const engMean = Math.round((values.eng1 + values.eng2 + values.eng3 + values.eng4 + values.eng5) / 5 * 100) / 100;
+
+            await api('POST', '/api/surveys', {
+                participantId: uniqueId,
+                ...values,
+                susScore, puMean, peouMean, engMean,
+                openLike: document.getElementById('surveyLike').value.trim(),
+                openImprove: document.getElementById('surveyImprove').value.trim()
+            });
+
+            showScreen('thankYouScreen');
+        }
+
+        // ========== INIT ==========
+        function init() {
+            initSurveyScales();
+            showScreen('startScreen');
+
+            const nameInput = document.getElementById('nameInput');
+            if (nameInput) {
+                nameInput.addEventListener('touchend', function(e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setTimeout(() => this.focus(), 30);
+                });
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>

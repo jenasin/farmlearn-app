@@ -1,0 +1,4 @@
+node_modules/
+farmlearn.db
+farmlearn.db-shm
+farmlearn.db-wal
