@@ -16,9 +16,22 @@
 var PARTICIPANTS_SHEET = 'Participants';
 var ANSWERS_SHEET = 'Answers';
 var SURVEYS_SHEET = 'Surveys';
+var SPREADSHEET_NAME = 'FarmLearn Data';
+
+function getSpreadsheet() {
+  // Hledej existujici spreadsheet podle jmena
+  var files = DriveApp.getFilesByName(SPREADSHEET_NAME);
+  if (files.hasNext()) {
+    return SpreadsheetApp.open(files.next());
+  }
+  // Neexistuje - vytvor novy
+  var ss = SpreadsheetApp.create(SPREADSHEET_NAME);
+  Logger.log('Vytvoreno: ' + ss.getUrl());
+  return ss;
+}
 
 function getOrCreateSheet(name, headers) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getSpreadsheet();
   var sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
