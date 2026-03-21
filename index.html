@@ -990,6 +990,18 @@
             // Reset survey scales
             initSurveyScales();
 
+            // Reset demographics
+            document.getElementById('consentCheck').checked = false;
+            document.getElementById('preCountry').value = '';
+            document.getElementById('preCountryOther').value = '';
+            document.getElementById('preCountryOtherBox').style.display = 'none';
+            document.getElementById('preAge').value = '';
+            document.querySelectorAll('input[name="preGender"]').forEach(r => r.checked = false);
+            document.getElementById('preProgram').value = '';
+            document.getElementById('preYear').value = '';
+            document.getElementById('surveyLike').value = '';
+            document.getElementById('surveyImprove').value = '';
+
             showScreen('startScreen');
         }
 
