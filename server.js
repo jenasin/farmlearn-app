@@ -64,6 +64,7 @@ app.get('/admin', async (req, res) => {
   const rows = events.map(e => {
     const d = JSON.parse(e.data || '{}');
     let detail = '';
+    if (e.action === 'register') detail = `${d.country || ''} age:${d.age || '?'} ${d.gender || ''} farm:${d.farmKnowledge || '?'} app:${d.appExperience || '?'}`;
     if (e.action === 'answer') detail = `${d.moduleName} L${d.level} Q${d.questionIndex} ${d.isCorrect ? 'OK' : 'WRONG'} ${d.responseTimeSec}s`;
     if (e.action === 'survey') detail = `SUS:${d.susScore} PU:${d.puMean} PEOU:${d.peouMean} ENG:${d.engMean}`;
     if (e.action === 'progress') detail = `${d.correct}/${d.total} (${d.accuracy}%) ${d.levelsCompleted} levels`;
