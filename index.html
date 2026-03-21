@@ -153,6 +153,15 @@
         .survey-scale button { width:40px; height:40px; border-radius:50%; border:2px solid #d1d5db; background:#fff; font-size:16px; font-weight:700; cursor:pointer; transition:all 0.2s; }
         .survey-scale button.selected { background:#16a34a; color:#fff; border-color:#16a34a; transform:scale(1.15); }
         .survey-scale button:hover { border-color:#16a34a; }
+        .survey-select { width:100%; padding:12px; border:2px solid #d1d5db; border-radius:12px; font-size:15px; background:#fff; }
+        .survey-select:focus { border-color:#16a34a; outline:none; }
+        .survey-input { width:100%; padding:12px; border:2px solid #d1d5db; border-radius:12px; font-size:15px; background:#fff; }
+        .survey-input:focus { border-color:#16a34a; outline:none; }
+        .survey-radio { display:flex; flex-wrap:wrap; gap:8px; }
+        .survey-radio label { padding:10px 16px; border:2px solid #d1d5db; border-radius:12px; cursor:pointer; font-size:14px; font-weight:600; transition:all 0.2s; }
+        .survey-radio input { display:none; }
+        .survey-radio input:checked + span { background:#16a34a; color:#fff; }
+        .survey-radio label:has(input:checked) { border-color:#16a34a; background:#16a34a; color:#fff; }
     </style>
 </head>
 <body>
@@ -183,6 +192,75 @@
             <div style="padding:0 16px;">
                 <button class="btn btn-green" onclick="startTest()">🚀 START TEST</button>
                 <p style="text-align:center; color:#888; margin-top:12px;">📚 15 Levels</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRE-TEST SCREEN -->
+    <div id="pretestScreen" class="screen" style="background:#f0fdf4;">
+        <div style="background:linear-gradient(135deg,#166534,#15803d); color:white; padding:20px; text-align:center;">
+            <h2 style="margin:0;">Before We Start</h2>
+            <p style="opacity:0.9; margin:4px 0 0;">Tell us a bit about yourself</p>
+        </div>
+        <div style="flex:1; overflow-y:auto; padding:16px;">
+            <div id="pretestForm" style="max-width:500px; margin:0 auto;">
+
+                <div class="survey-q" data-name="pre_country">
+                    <label>Country of origin</label>
+                    <select class="survey-select" id="preCountry">
+                        <option value="">-- Select --</option>
+                        <option>Kenya</option><option>Tanzania</option><option>Uganda</option><option>Ethiopia</option>
+                        <option>Nigeria</option><option>Ghana</option><option>Cameroon</option><option>Zambia</option>
+                        <option>Mozambique</option><option>India</option><option>Vietnam</option><option>Indonesia</option>
+                        <option>Czech Republic</option><option>Other</option>
+                    </select>
+                </div>
+
+                <div class="survey-q" data-name="pre_country_other" id="preCountryOtherBox" style="display:none;">
+                    <label>If "Other", specify your country</label>
+                    <input class="survey-input" id="preCountryOther" placeholder="Your country...">
+                </div>
+
+                <div class="survey-q" data-name="pre_age">
+                    <label>Age</label>
+                    <input class="survey-input" id="preAge" type="number" min="15" max="99" placeholder="e.g. 22">
+                </div>
+
+                <div class="survey-q" data-name="pre_gender">
+                    <label>Gender</label>
+                    <div class="survey-radio">
+                        <label><input type="radio" name="preGender" value="Male"><span>Male</span></label>
+                        <label><input type="radio" name="preGender" value="Female"><span>Female</span></label>
+                        <label><input type="radio" name="preGender" value="Other"><span>Other / Prefer not to say</span></label>
+                    </div>
+                </div>
+
+                <div class="survey-q" data-name="pre_program">
+                    <label>Study Programme (e.g. Computer Science)</label>
+                    <input class="survey-input" id="preProgram" placeholder="Your study programme...">
+                </div>
+
+                <div class="survey-q" data-name="pre_year">
+                    <label>Year of Study</label>
+                    <select class="survey-select" id="preYear">
+                        <option value="">-- Select --</option>
+                        <option>1st year (Bachelor)</option><option>2nd year (Bachelor)</option><option>3rd year (Bachelor)</option>
+                        <option>1st year (Master)</option><option>2nd year (Master)</option><option>Other</option>
+                    </select>
+                </div>
+
+                <div class="survey-q" data-name="pre_farmknowledge">
+                    <label>How much do you know about farming? (1 = Nothing, 5 = Expert)</label>
+                    <div class="survey-scale"></div>
+                </div>
+
+                <div class="survey-q" data-name="pre_appexperience">
+                    <label>Have you used learning apps before? (1 = Never, 5 = Daily)</label>
+                    <div class="survey-scale"></div>
+                </div>
+
+                <div id="pretestError" style="display:none; color:#ef4444; text-align:center; margin-top:12px; font-weight:600;">Please fill in all fields.</div>
+                <button class="btn btn-green" onclick="submitPretest()" style="margin-top:16px;">CONTINUE TO APP</button>
             </div>
         </div>
     </div>
@@ -487,8 +565,41 @@
             nameInput.style.borderColor = '#58cc02';
 
             uniqueId = generateUniqueId();
-            send({ action: 'register', uniqueId, name: userName });
 
+            // Show country "other" field
+            document.getElementById('preCountry').onchange = function() {
+                document.getElementById('preCountryOtherBox').style.display = this.value === 'Other' ? 'block' : 'none';
+            };
+
+            // Go to pre-test
+            showScreen('pretestScreen');
+        }
+
+        function submitPretest() {
+            const country = document.getElementById('preCountry').value;
+            const age = document.getElementById('preAge').value;
+            const gender = document.querySelector('input[name="preGender"]:checked');
+            const program = document.getElementById('preProgram').value;
+            const year = document.getElementById('preYear').value;
+            const farmKnowledge = getSurveyValue('pre_farmknowledge');
+            const appExperience = getSurveyValue('pre_appexperience');
+
+            // Validate
+            if (!country || !age || !gender || !program || !year || !farmKnowledge || !appExperience) {
+                document.getElementById('pretestError').style.display = 'block';
+                return;
+            }
+            document.getElementById('pretestError').style.display = 'none';
+
+            const countryFinal = country === 'Other' ? document.getElementById('preCountryOther').value || 'Other' : country;
+
+            // Save pre-test
+            send({ action: 'register', uniqueId, name: userName,
+                country: countryFinal, age, gender: gender.value, program, yearOfStudy: year,
+                farmKnowledge, appExperience
+            });
+
+            // Start the actual test
             sessionStart = Date.now();
             answers = [];
             totalCorrect = 0;
