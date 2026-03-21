@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmLearn Study - Results Dashboard</title>
+    <style>
+        :root {
+            --green-50: #f0fdf4;
+            --green-100: #dcfce7;
+            --green-200: #bbf7d0;
+            --green-300: #86efac;
+            --green-400: #4ade80;
+            --green-500: #22c55e;
+            --green-600: #16a34a;
+            --green-700: #15803d;
+            --green-800: #166534;
+            --green-900: #14532d;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --blue-500: #3b82f6;
+            --blue-600: #2563eb;
+            --red-500: #ef4444;
+            --amber-500: #f59e0b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--green-800), var(--green-700));
+            color: white;
+            padding: 24px 20px;
+            border-bottom: 4px solid var(--green-900);
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header h1 { font-size: 22px; }
+        .header .subtitle { font-size: 13px; opacity: 0.85; }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .header-actions button, .header-actions a {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+
+        .header-actions button:hover, .header-actions a:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Summary cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border: 1px solid var(--gray-100);
+        }
+
+        .summary-card .value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--green-600);
+        }
+
+        .summary-card .label {
+            font-size: 12px;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* Tables */
+        .table-section {
+            background: white;
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border: 1px solid var(--gray-100);
+        }
+
+        .table-section h2 {
+            font-size: 17px;
+            color: var(--green-800);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-section .table-desc {
+            font-size: 13px;
+            color: var(--gray-500);
+            margin-bottom: 16px;
+        }
+
+        .copy-btn {
+            float: right;
+            background: var(--green-50);
+            color: var(--green-700);
+            border: 1px solid var(--green-200);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .copy-btn:hover { background: var(--green-100); }
+
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        table.data-table thead {
+            background: var(--green-50);
+        }
+
+        table.data-table th {
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--green-800);
+            font-size: 13px;
+            border-bottom: 2px solid var(--green-200);
+            white-space: nowrap;
+        }
+
+        table.data-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        table.data-table tbody tr:hover {
+            background: var(--green-50);
+        }
+
+        table.data-table .num {
+            text-align: right;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 13px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-green { background: var(--green-100); color: var(--green-700); }
+        .badge-amber { background: #fef3c7; color: #92400e; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+
+        /* Charts */
+        .chart-container {
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+
+        /* No data */
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-400);
+        }
+
+        .no-data h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: var(--gray-500);
+        }
+
+        /* Open ended responses */
+        .response-list {
+            list-style: none;
+        }
+
+        .response-list li {
+            padding: 10px 14px;
+            background: var(--gray-50);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            border-left: 3px solid var(--green-400);
+        }
+
+        .response-list li .pid {
+            font-size: 11px;
+            color: var(--gray-400);
+            font-family: monospace;
+        }
+
+        /* Import area */
+        .import-area {
+            margin: 16px 0;
+            padding: 20px;
+            background: var(--gray-50);
+            border: 2px dashed var(--gray-300);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .import-area textarea {
+            width: 100%;
+            min-height: 100px;
+            border: 1px solid var(--gray-200);
+            border-radius: 6px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .import-area button {
+            margin-top: 8px;
+            background: var(--green-600);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Tabs */
+        .tab-bar {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--gray-200);
+            overflow-x: auto;
+        }
+
+        .tab-bar button {
+            padding: 10px 18px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-500);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+
+        .tab-bar button.active {
+            color: var(--green-700);
+            border-bottom-color: var(--green-600);
+        }
+
+        .tab-bar button:hover {
+            color: var(--green-600);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Alpha indicator */
+        .alpha-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: monospace;
+            margin-left: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .chart-row { grid-template-columns: 1fr; }
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+            .header-inner { flex-direction: column; align-items: flex-start; }
+        }
+
+        @media print {
+            .header-actions, .tab-bar, .copy-btn, .import-area { display: none; }
+            .tab-content { display: block !important; }
+            .table-section { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-inner">
+        <div>
+            <h1>FarmLearn Study - Results Dashboard</h1>
+            <div class="subtitle">Aggregated results and descriptive statistics</div>
+        </div>
+        <div class="header-actions">
+            <button onclick="exportJSON()">Export JSON</button>
+            <button onclick="exportCSV()">Export CSV</button>
+            <button onclick="window.print()">Print</button>
+            <a href="/">App</a>
+            <a href="/admin">Admin</a>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+
+    <div class="summary-grid" id="summaryCards"></div>
+
+    <div class="tab-bar" id="tabBar">
+        <button class="active" onclick="showTab('tab-demographics')">Demographics</button>
+        <button onclick="showTab('tab-sus')">SUS</button>
+        <button onclick="showTab('tab-tam')">TAM</button>
+        <button onclick="showTab('tab-engagement')">Engagement</button>
+        <button onclick="showTab('tab-knowledge')">Knowledge</button>
+        <button onclick="showTab('tab-open')">Open-Ended</button>
+        <button onclick="showTab('tab-charts')">Charts</button>
+        <button onclick="showTab('tab-raw')">Raw Data</button>
+        <button onclick="showTab('tab-import')">Import</button>
+    </div>
+
+    <div id="noData" class="no-data" style="display:none;">
+        <h2>No Responses Yet</h2>
+        <p>Complete the study survey to see results here, or import data below.</p>
+    </div>
+
+    <!-- Demographics -->
+    <div class="tab-content active" id="tab-demographics">
+        <div class="table-section">
+            <h2>Table 1: Demographic Summary</h2>
+            <div class="table-desc">Participant characteristics (N = <span class="n-count">0</span>)</div>
+            <button class="copy-btn" onclick="copyTable('demog-table')">Copy Table</button>
+            <div id="demog-table"></div>
+        </div>
+    </div>
+
+    <!-- SUS -->
+    <div class="tab-content" id="tab-sus">
+        <div class="table-section">
+            <h2>Table 2: System Usability Scale (SUS) Results
+                <span class="alpha-badge" id="sus-alpha"></span>
+            </h2>
+            <div class="table-desc">Standard SUS scoring (Brooke, 1996). Score range: 0-100. (N = <span class="n-count">0</span>)</div>
+            <button class="copy-btn" onclick="copyTable('sus-results')">Copy Table</button>
+            <div id="sus-results"></div>
+        </div>
+    </div>
+
+    <!-- TAM -->
+    <div class="tab-content" id="tab-tam">
+        <div class="table-section">
+            <h2>Table 3: Technology Acceptance Model (TAM) Results
+                <span class="alpha-badge" id="tam-pu-alpha"></span>
+                <span class="alpha-badge" id="tam-peou-alpha"></span>
+            </h2>
+            <div class="table-desc">Perceived Usefulness (PU) and Perceived Ease of Use (PEOU), 5-point Likert scale. (N = <span class="n-count">0</span>)</div>
+            <button class="copy-btn" onclick="copyTable('tam-results')">Copy Table</button>
+            <div id="tam-results"></div>
+        </div>
+    </div>
+
+    <!-- Engagement -->
+    <div class="tab-content" id="tab-engagement">
+        <div class="table-section">
+            <h2>Table 4: Engagement &amp; Gamification Results
+                <span class="alpha-badge" id="engage-alpha"></span>
+            </h2>
+            <div class="table-desc">5-point Likert scale (1 = Strongly Disagree, 5 = Strongly Agree). (N = <span class="n-count">0</span>)</div>
+            <button class="copy-btn" onclick="copyTable('engage-results')">Copy Table</button>
+            <div id="engage-results"></div>
+        </div>
+    </div>
+
+    <!-- Knowledge -->
+    <div class="tab-content" id="tab-knowledge">
+        <div class="table-section">
+            <h2>Table 5: Knowledge Retention Test Results</h2>
+            <div class="table-desc">5 questions based on FarmLearn content. (N = <span class="n-count">0</span>)</div>
+            <button class="copy-btn" onclick="copyTable('know-results')">Copy Table</button>
+            <div id="know-results"></div>
+        </div>
+    </div>
+
+    <!-- Open-ended -->
+    <div class="tab-content" id="tab-open">
+        <div class="table-section">
+            <h2>Open-Ended Responses</h2>
+            <div class="table-desc">Qualitative feedback from participants. (N = <span class="n-count">0</span>)</div>
+            <div id="open-results"></div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="tab-content" id="tab-charts">
+        <div class="table-section">
+            <h2>Visual Summary</h2>
+            <div class="chart-row">
+                <div class="chart-container">
+                    <h3 style="font-size:14px; color:var(--gray-600); margin-bottom:8px;">SUS Score Distribution</h3>
+                    <canvas id="chart-sus" width="400" height="250"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 style="font-size:14px; color:var(--gray-600); margin-bottom:8px;">TAM & Engagement Means</h3>
+                    <canvas id="chart-tam" width="400" height="250"></canvas>
+                </div>
+            </div>
+            <div class="chart-row" style="margin-top:20px;">
+                <div class="chart-container">
+                    <h3 style="font-size:14px; color:var(--gray-600); margin-bottom:8px;">Knowledge Test Scores</h3>
+                    <canvas id="chart-knowledge" width="400" height="250"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 style="font-size:14px; color:var(--gray-600); margin-bottom:8px;">Prior Knowledge Distribution</h3>
+                    <canvas id="chart-prior" width="400" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Raw data -->
+    <div class="tab-content" id="tab-raw">
+        <div class="table-section">
+            <h2>Raw Data</h2>
+            <div class="table-desc">Individual participant responses</div>
+            <button class="copy-btn" onclick="copyTable('raw-table')">Copy Table</button>
+            <div id="raw-table" style="overflow-x:auto;"></div>
+        </div>
+    </div>
+
+    <!-- Import -->
+    <div class="tab-content" id="tab-import">
+        <div class="table-section">
+            <h2>Import / Merge Data</h2>
+            <div class="table-desc">Import JSON data collected from other devices. Data will be merged (duplicates by participant ID are skipped).</div>
+            <div class="import-area">
+                <p style="font-size:14px; color:var(--gray-600);">Paste exported JSON data below:</p>
+                <textarea id="importData" placeholder='[{"participantId":"FL-XXXX",...}]'></textarea>
+                <br>
+                <button onclick="importData()">Import &amp; Merge</button>
+                <p id="importMsg" style="margin-top:8px; font-size:13px; color:var(--green-600);"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let cachedData = [];
+
+// ===== Scale items (must match index.html) =====
+const SUS_ITEMS = [
+    "I think that I would like to use FarmLearn frequently.",
+    "I found FarmLearn unnecessarily complex.",
+    "I thought FarmLearn was easy to use.",
+    "I think that I would need the support of a technical person to be able to use FarmLearn.",
+    "I found the various functions in FarmLearn were well integrated.",
+    "I thought there was too much inconsistency in FarmLearn.",
+    "I would imagine that most people would learn to use FarmLearn very quickly.",
+    "I found FarmLearn very cumbersome to use.",
+    "I felt very confident using FarmLearn.",
+    "I needed to learn a lot of things before I could get going with FarmLearn."
+];
+
+const PU_ITEMS = [
+    "Using FarmLearn improved my understanding of farming practices.",
+    "FarmLearn made it easier to learn about agriculture compared to reading a textbook.",
+    "I find FarmLearn useful for acquiring agricultural knowledge.",
+    "Using FarmLearn increased my interest in learning about farming."
+];
+
+const PEOU_ITEMS = [
+    "Learning to operate FarmLearn was easy for me.",
+    "I found it easy to get FarmLearn to do what I wanted it to do.",
+    "The interface of FarmLearn was clear and understandable.",
+    "Overall, I found FarmLearn easy to use."
+];
+
+const ENGAGE_ITEMS = [
+    "The game-like elements (levels, progress) motivated me to continue.",
+    "The immediate feedback helped me learn.",
+    "The time limit added positive pressure to the experience.",
+    "I would recommend this app to people interested in farming.",
+    "I learned new farming knowledge from this app."
+];
+
+const KNOWLEDGE_QUESTIONS = [
+    "Which type of soil is most suitable for growing maize?",
+    "What is the primary benefit of crop rotation in farming?",
+    "Why are legume crops like beans valuable in agriculture?",
+    "What farming practice helps conserve soil moisture during dry periods?",
+    "To what moisture level should harvested grain be dried for safe storage?"
+];
+
+// ===== DATA =====
+function getData() {
+    return cachedData;
+}
+
+async function loadData() {
+    try {
+        const res = await fetch('/api/export/json');
+        const events = await res.json();
+
+        // Group events by participant_id
+        const byParticipant = {};
+        events.forEach(function(e) {
+            const d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+            const pid = d.participantId || d.uniqueId || e.participant_id || '';
+            if (!pid) return;
+            if (!byParticipant[pid]) byParticipant[pid] = { register: null, survey: null, progress: null, answers: [] };
+            if (d.action === 'register') byParticipant[pid].register = d;
+            if (d.action === 'survey') byParticipant[pid].survey = d;
+            if (d.action === 'progress') byParticipant[pid].progress = d;
+            if (d.action === 'answer') byParticipant[pid].answers.push(d);
+        });
+
+        // Transform to dashboard format
+        cachedData = [];
+        Object.keys(byParticipant).forEach(function(pid) {
+            const p = byParticipant[pid];
+            if (!p.survey) return; // Only include participants who completed survey
+
+            const reg = p.register || {};
+            const s = p.survey;
+            const prog = p.progress || {};
+
+            cachedData.push({
+                participantId: pid,
+                timestamp: s.timestamp || reg.timestamp || '',
+                appDurationSeconds: prog.duration || 0,
+                age: parseInt(reg.age) || 0,
+                gender: (reg.gender || '').toLowerCase().replace(/ \/.*/,''),
+                studyProgram: reg.program || '',
+                yearOfStudy: reg.yearOfStudy || '',
+                priorKnowledge: parseInt(reg.farmKnowledge) || 0,
+                priorEdApps: mapEdApps(parseInt(reg.appExperience) || 0),
+                country: reg.country || '',
+
+                sus: [s.sus1, s.sus2, s.sus3, s.sus4, s.sus5, s.sus6, s.sus7, s.sus8, s.sus9, s.sus10].map(Number),
+                susScore: Number(s.susScore) || 0,
+
+                pu: [s.pu1, s.pu2, s.pu3, s.pu4].map(Number),
+                puMean: Number(s.puMean) || 0,
+
+                peou: [s.peou1, s.peou2, s.peou3, s.peou4].map(Number),
+                peouMean: Number(s.peouMean) || 0,
+
+                engagement: [s.eng1, s.eng2, s.eng3, s.eng4, s.eng5].map(Number),
+                engagementMean: Number(s.engMean) || 0,
+
+                openLike: s.openLike || '',
+                openImprove: s.openImprove || '',
+
+                // Quiz results from progress
+                quizTotal: prog.total || 0,
+                quizCorrect: prog.correct || 0,
+                quizAccuracy: prog.accuracy || 0,
+                levelsCompleted: prog.levelsCompleted || 0,
+
+                // Knowledge (use quiz accuracy as proxy)
+                knowledgeCorrect: prog.correct || 0,
+                knowledgePct: prog.accuracy || 0,
+                knowledgeAnswers: []
+            });
+        });
+
+        render();
+    } catch(e) {
+        console.error('Failed to load data:', e);
+        render();
+    }
+}
+
+function mapEdApps(val) {
+    var m = {1:'never', 2:'rarely', 3:'sometimes', 4:'often', 5:'very-often'};
+    return m[val] || 'never';
+}
+
+// ===== STATS HELPERS =====
+function mean(arr) {
+    if (!arr.length) return 0;
+    return arr.reduce(function(a,b){return a+b;},0) / arr.length;
+}
+
+function sd(arr) {
+    if (arr.length < 2) return 0;
+    const m = mean(arr);
+    const sqDiffs = arr.map(function(v){return Math.pow(v-m,2);});
+    return Math.sqrt(sqDiffs.reduce(function(a,b){return a+b;},0) / (arr.length - 1));
+}
+
+function min(arr) { return arr.length ? Math.min.apply(null, arr) : 0; }
+function max(arr) { return arr.length ? Math.max.apply(null, arr) : 0; }
+function median(arr) {
+    if (!arr.length) return 0;
+    const s = arr.slice().sort(function(a,b){return a-b;});
+    const mid = Math.floor(s.length / 2);
+    return s.length % 2 ? s[mid] : (s[mid-1] + s[mid]) / 2;
+}
+
+function fmt(n, d) {
+    d = d === undefined ? 2 : d;
+    return Number(n).toFixed(d);
+}
+
+function cronbachAlpha(items) {
+    // items: array of arrays (each sub-array is one item's scores across participants)
+    const k = items.length;
+    if (k < 2) return null;
+    const n = items[0].length;
+    if (n < 2) return null;
+
+    // Variance of each item
+    const itemVars = items.map(function(item) { return variance(item); });
+    const sumItemVars = itemVars.reduce(function(a,b){return a+b;},0);
+
+    // Total scores for each participant
+    const totals = [];
+    for (let p = 0; p < n; p++) {
+        let total = 0;
+        for (let i = 0; i < k; i++) {
+            total += items[i][p];
+        }
+        totals.push(total);
+    }
+    const totalVar = variance(totals);
+
+    if (totalVar === 0) return null;
+    return (k / (k - 1)) * (1 - sumItemVars / totalVar);
+}
+
+function variance(arr) {
+    if (arr.length < 2) return 0;
+    const m = mean(arr);
+    return arr.map(function(v){return Math.pow(v-m,2);}).reduce(function(a,b){return a+b;},0) / (arr.length - 1);
+}
+
+function alphaLabel(a) {
+    if (a === null) return { text: 'N/A', cls: '' };
+    if (a >= 0.9) return { text: 'Excellent', cls: 'badge-green' };
+    if (a >= 0.8) return { text: 'Good', cls: 'badge-green' };
+    if (a >= 0.7) return { text: 'Acceptable', cls: 'badge-amber' };
+    if (a >= 0.6) return { text: 'Questionable', cls: 'badge-amber' };
+    return { text: 'Poor', cls: 'badge-red' };
+}
+
+// ===== COUNT OCCURRENCES =====
+function countValues(arr) {
+    const counts = {};
+    arr.forEach(function(v) {
+        counts[v] = (counts[v] || 0) + 1;
+    });
+    return counts;
+}
+
+// ===== TABS =====
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.tab-bar button').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById(tabId).classList.add('active');
+    // Find the button
+    const btns = document.querySelectorAll('.tab-bar button');
+    btns.forEach(function(b) {
+        if (b.getAttribute('onclick') && b.getAttribute('onclick').indexOf(tabId) > -1) {
+            b.classList.add('active');
+        }
+    });
+}
+
+// ===== RENDER =====
+function render() {
+    const data = getData();
+    const n = data.length;
+
+    // Update n-counts
+    document.querySelectorAll('.n-count').forEach(function(el) { el.textContent = n; });
+
+    if (n === 0) {
+        document.getElementById('noData').style.display = 'block';
+        document.getElementById('summaryCards').innerHTML = '';
+        return;
+    }
+    document.getElementById('noData').style.display = 'none';
+
+    // ===== SUMMARY CARDS =====
+    const susScores = data.map(function(d){return d.susScore;});
+    const puMeans = data.map(function(d){return d.puMean;});
+    const peouMeans = data.map(function(d){return d.peouMean;});
+    const engMeans = data.map(function(d){return d.engagementMean;});
+    const quizAccs = data.map(function(d){return d.quizAccuracy;});
+
+    document.getElementById('summaryCards').innerHTML =
+        summaryCard(n, 'Participants') +
+        summaryCard(fmt(mean(susScores),1), 'Mean SUS Score') +
+        summaryCard(fmt(mean(puMeans),2), 'Mean PU') +
+        summaryCard(fmt(mean(peouMeans),2), 'Mean PEOU') +
+        summaryCard(fmt(mean(engMeans),2), 'Mean Engagement') +
+        summaryCard(fmt(mean(quizAccs),1) + '%', 'Mean Quiz Accuracy');
+
+    // ===== TABLE 1: Demographics =====
+    renderDemographics(data);
+
+    // ===== TABLE 2: SUS =====
+    renderSUS(data);
+
+    // ===== TABLE 3: TAM =====
+    renderTAM(data);
+
+    // ===== TABLE 4: Engagement =====
+    renderEngagement(data);
+
+    // ===== TABLE 5: Knowledge =====
+    renderKnowledge(data);
+
+    // ===== Open-ended =====
+    renderOpenEnded(data);
+
+    // ===== Raw data =====
+    renderRaw(data);
+
+    // ===== Charts =====
+    setTimeout(function() { renderCharts(data); }, 100);
+}
+
+function summaryCard(value, label) {
+    return '<div class="summary-card"><div class="value">' + value + '</div><div class="label">' + label + '</div></div>';
+}
+
+// ===== TABLE 1: Demographics =====
+function renderDemographics(data) {
+    const n = data.length;
+    const ages = data.map(function(d){return d.age;});
+    const genders = countValues(data.map(function(d){return d.gender;}));
+    const years = countValues(data.map(function(d){return d.yearOfStudy;}));
+    const prior = data.map(function(d){return d.priorKnowledge;});
+    const edapps = countValues(data.map(function(d){return d.priorEdApps;}));
+
+    let html = '<table class="data-table"><thead><tr><th>Variable</th><th>Category / Statistic</th><th class="num">Value</th><th class="num">%</th></tr></thead><tbody>';
+
+    // Age
+    html += '<tr><td rowspan="4"><strong>Age</strong></td><td>Mean (SD)</td><td class="num">' + fmt(mean(ages),1) + ' (' + fmt(sd(ages),1) + ')</td><td class="num">-</td></tr>';
+    html += '<tr><td>Median</td><td class="num">' + fmt(median(ages),1) + '</td><td class="num">-</td></tr>';
+    html += '<tr><td>Min</td><td class="num">' + min(ages) + '</td><td class="num">-</td></tr>';
+    html += '<tr><td>Max</td><td class="num">' + max(ages) + '</td><td class="num">-</td></tr>';
+
+    // Gender
+    const genderLabels = {male:'Male', female:'Female', 'non-binary':'Non-binary', 'prefer-not':'Prefer not to say'};
+    const genderKeys = Object.keys(genderLabels);
+    let first = true;
+    genderKeys.forEach(function(k) {
+        const c = genders[k] || 0;
+        if (first) {
+            html += '<tr><td rowspan="' + genderKeys.length + '"><strong>Gender</strong></td>';
+            first = false;
+        } else {
+            html += '<tr>';
+        }
+        html += '<td>' + genderLabels[k] + '</td><td class="num">' + c + '</td><td class="num">' + fmt(c/n*100,1) + '</td></tr>';
+    });
+
+    // Prior knowledge
+    html += '<tr><td rowspan="3"><strong>Prior Farming Knowledge</strong><br><small>(1-5 scale)</small></td>';
+    html += '<td>Mean (SD)</td><td class="num">' + fmt(mean(prior),2) + ' (' + fmt(sd(prior),2) + ')</td><td class="num">-</td></tr>';
+    html += '<tr><td>Min - Max</td><td class="num">' + min(prior) + ' - ' + max(prior) + '</td><td class="num">-</td></tr>';
+    html += '<tr><td>Median</td><td class="num">' + fmt(median(prior),1) + '</td><td class="num">-</td></tr>';
+
+    // Ed apps
+    const edLabels = {never:'Never', rarely:'Rarely', sometimes:'Sometimes', often:'Often', 'very-often':'Very often'};
+    const edKeys = Object.keys(edLabels);
+    first = true;
+    edKeys.forEach(function(k) {
+        const c = edapps[k] || 0;
+        if (first) {
+            html += '<tr><td rowspan="' + edKeys.length + '"><strong>Prior Ed App Usage</strong></td>';
+            first = false;
+        } else {
+            html += '<tr>';
+        }
+        html += '<td>' + edLabels[k] + '</td><td class="num">' + c + '</td><td class="num">' + fmt(c/n*100,1) + '</td></tr>';
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('demog-table').innerHTML = html;
+}
+
+// ===== TABLE 2: SUS =====
+function renderSUS(data) {
+    const n = data.length;
+
+    // Per-item stats
+    let html = '<table class="data-table"><thead><tr><th>#</th><th>Item</th><th class="num">Mean</th><th class="num">SD</th><th class="num">Min</th><th class="num">Max</th></tr></thead><tbody>';
+
+    const itemArrays = [];
+    SUS_ITEMS.forEach(function(item, i) {
+        const vals = data.map(function(d){return d.sus[i];});
+        itemArrays.push(vals);
+        html += '<tr><td>' + (i+1) + '</td><td style="font-size:13px;">' + item + '</td>';
+        html += '<td class="num">' + fmt(mean(vals)) + '</td><td class="num">' + fmt(sd(vals)) + '</td>';
+        html += '<td class="num">' + min(vals) + '</td><td class="num">' + max(vals) + '</td></tr>';
+    });
+
+    // Overall SUS score
+    const susScores = data.map(function(d){return d.susScore;});
+    html += '<tr style="background:var(--green-50); font-weight:700;"><td></td><td>Overall SUS Score (0-100)</td>';
+    html += '<td class="num">' + fmt(mean(susScores)) + '</td><td class="num">' + fmt(sd(susScores)) + '</td>';
+    html += '<td class="num">' + fmt(min(susScores)) + '</td><td class="num">' + fmt(max(susScores)) + '</td></tr>';
+
+    // Adjective rating
+    const susMean = mean(susScores);
+    let adjective = 'Poor';
+    if (susMean >= 85) adjective = 'Excellent';
+    else if (susMean >= 72) adjective = 'Good';
+    else if (susMean >= 52) adjective = 'OK';
+    else if (susMean >= 38) adjective = 'Poor';
+    else adjective = 'Awful';
+
+    html += '<tr><td></td><td>Adjective Rating (Bangor et al., 2009)</td><td class="num" colspan="4"><span class="badge ' + (susMean >= 72 ? 'badge-green' : susMean >= 52 ? 'badge-amber' : 'badge-red') + '">' + adjective + '</span></td></tr>';
+
+    html += '</tbody></table>';
+
+    // Cronbach's alpha
+    const alpha = cronbachAlpha(itemArrays);
+    const al = alphaLabel(alpha);
+    document.getElementById('sus-alpha').textContent = 'Cronbach\'s alpha = ' + (alpha !== null ? fmt(alpha, 3) : 'N/A');
+    document.getElementById('sus-alpha').className = 'alpha-badge ' + al.cls;
+
+    document.getElementById('sus-results').innerHTML = html;
+}
+
+// ===== TABLE 3: TAM =====
+function renderTAM(data) {
+    const n = data.length;
+
+    let html = '<table class="data-table"><thead><tr><th>Scale</th><th>#</th><th>Item</th><th class="num">Mean</th><th class="num">SD</th><th class="num">Min</th><th class="num">Max</th></tr></thead><tbody>';
+
+    // PU
+    const puArrays = [];
+    PU_ITEMS.forEach(function(item, i) {
+        const vals = data.map(function(d){return d.pu[i];});
+        puArrays.push(vals);
+        html += '<tr><td>' + (i===0?'<strong>Perceived Usefulness</strong>':'') + '</td>';
+        html += '<td>PU' + (i+1) + '</td><td style="font-size:13px;">' + item + '</td>';
+        html += '<td class="num">' + fmt(mean(vals)) + '</td><td class="num">' + fmt(sd(vals)) + '</td>';
+        html += '<td class="num">' + min(vals) + '</td><td class="num">' + max(vals) + '</td></tr>';
+    });
+
+    const puMeans = data.map(function(d){return d.puMean;});
+    html += '<tr style="background:var(--green-50); font-weight:600;"><td></td><td></td><td>PU Scale Mean</td>';
+    html += '<td class="num">' + fmt(mean(puMeans)) + '</td><td class="num">' + fmt(sd(puMeans)) + '</td>';
+    html += '<td class="num">' + fmt(min(puMeans)) + '</td><td class="num">' + fmt(max(puMeans)) + '</td></tr>';
+
+    // PEOU
+    const peouArrays = [];
+    PEOU_ITEMS.forEach(function(item, i) {
+        const vals = data.map(function(d){return d.peou[i];});
+        peouArrays.push(vals);
+        html += '<tr><td>' + (i===0?'<strong>Perceived Ease of Use</strong>':'') + '</td>';
+        html += '<td>PEOU' + (i+1) + '</td><td style="font-size:13px;">' + item + '</td>';
+        html += '<td class="num">' + fmt(mean(vals)) + '</td><td class="num">' + fmt(sd(vals)) + '</td>';
+        html += '<td class="num">' + min(vals) + '</td><td class="num">' + max(vals) + '</td></tr>';
+    });
+
+    const peouMeans = data.map(function(d){return d.peouMean;});
+    html += '<tr style="background:var(--green-50); font-weight:600;"><td></td><td></td><td>PEOU Scale Mean</td>';
+    html += '<td class="num">' + fmt(mean(peouMeans)) + '</td><td class="num">' + fmt(sd(peouMeans)) + '</td>';
+    html += '<td class="num">' + fmt(min(peouMeans)) + '</td><td class="num">' + fmt(max(peouMeans)) + '</td></tr>';
+
+    html += '</tbody></table>';
+
+    // Cronbach's alpha
+    const puAlpha = cronbachAlpha(puArrays);
+    const peouAlpha = cronbachAlpha(peouArrays);
+    const puAl = alphaLabel(puAlpha);
+    const peouAl = alphaLabel(peouAlpha);
+
+    document.getElementById('tam-pu-alpha').textContent = 'PU alpha = ' + (puAlpha !== null ? fmt(puAlpha, 3) : 'N/A');
+    document.getElementById('tam-pu-alpha').className = 'alpha-badge ' + puAl.cls;
+    document.getElementById('tam-peou-alpha').textContent = 'PEOU alpha = ' + (peouAlpha !== null ? fmt(peouAlpha, 3) : 'N/A');
+    document.getElementById('tam-peou-alpha').className = 'alpha-badge ' + peouAl.cls;
+
+    document.getElementById('tam-results').innerHTML = html;
+}
+
+// ===== TABLE 4: Engagement =====
+function renderEngagement(data) {
+    const n = data.length;
+
+    let html = '<table class="data-table"><thead><tr><th>#</th><th>Item</th><th class="num">Mean</th><th class="num">SD</th><th class="num">Min</th><th class="num">Max</th></tr></thead><tbody>';
+
+    const engArrays = [];
+    ENGAGE_ITEMS.forEach(function(item, i) {
+        const vals = data.map(function(d){return d.engagement[i];});
+        engArrays.push(vals);
+        html += '<tr><td>E' + (i+1) + '</td><td style="font-size:13px;">' + item + '</td>';
+        html += '<td class="num">' + fmt(mean(vals)) + '</td><td class="num">' + fmt(sd(vals)) + '</td>';
+        html += '<td class="num">' + min(vals) + '</td><td class="num">' + max(vals) + '</td></tr>';
+    });
+
+    const engMeans = data.map(function(d){return d.engagementMean;});
+    html += '<tr style="background:var(--green-50); font-weight:600;"><td></td><td>Engagement Scale Mean</td>';
+    html += '<td class="num">' + fmt(mean(engMeans)) + '</td><td class="num">' + fmt(sd(engMeans)) + '</td>';
+    html += '<td class="num">' + fmt(min(engMeans)) + '</td><td class="num">' + fmt(max(engMeans)) + '</td></tr>';
+
+    html += '</tbody></table>';
+
+    const engAlpha = cronbachAlpha(engArrays);
+    const engAl = alphaLabel(engAlpha);
+    document.getElementById('engage-alpha').textContent = 'alpha = ' + (engAlpha !== null ? fmt(engAlpha, 3) : 'N/A');
+    document.getElementById('engage-alpha').className = 'alpha-badge ' + engAl.cls;
+
+    document.getElementById('engage-results').innerHTML = html;
+}
+
+// ===== TABLE 5: Quiz Performance =====
+function renderKnowledge(data) {
+    const n = data.length;
+    const totals = data.map(function(d){return d.quizTotal;});
+    const corrects = data.map(function(d){return d.quizCorrect;});
+    const accs = data.map(function(d){return d.quizAccuracy;});
+    const levels = data.map(function(d){return d.levelsCompleted;});
+
+    let html = '<table class="data-table"><thead><tr><th>Metric</th><th class="num">Mean</th><th class="num">SD</th><th class="num">Min</th><th class="num">Max</th><th class="num">Median</th></tr></thead><tbody>';
+
+    html += '<tr><td>Total Questions Answered</td><td class="num">' + fmt(mean(totals),1) + '</td><td class="num">' + fmt(sd(totals),1) + '</td><td class="num">' + min(totals) + '</td><td class="num">' + max(totals) + '</td><td class="num">' + fmt(median(totals),1) + '</td></tr>';
+    html += '<tr><td>Correct Answers</td><td class="num">' + fmt(mean(corrects),1) + '</td><td class="num">' + fmt(sd(corrects),1) + '</td><td class="num">' + min(corrects) + '</td><td class="num">' + max(corrects) + '</td><td class="num">' + fmt(median(corrects),1) + '</td></tr>';
+    html += '<tr style="background:var(--green-50); font-weight:600;"><td>Accuracy (%)</td><td class="num">' + fmt(mean(accs),1) + '</td><td class="num">' + fmt(sd(accs),1) + '</td><td class="num">' + fmt(min(accs),1) + '</td><td class="num">' + fmt(max(accs),1) + '</td><td class="num">' + fmt(median(accs),1) + '</td></tr>';
+    html += '<tr><td>Levels Completed (out of 15)</td><td class="num">' + fmt(mean(levels),1) + '</td><td class="num">' + fmt(sd(levels),1) + '</td><td class="num">' + min(levels) + '</td><td class="num">' + max(levels) + '</td><td class="num">' + fmt(median(levels),1) + '</td></tr>';
+
+    html += '</tbody></table>';
+
+    if (n >= 3) {
+        const priors = data.map(function(d){return d.priorKnowledge;});
+        const r = pearsonR(priors, accs);
+        html += '<p style="margin-top:12px; font-size:13px; color:var(--gray-600);">Pearson r (prior knowledge vs accuracy): <strong>r = ' + fmt(r, 3) + '</strong></p>';
+    }
+
+    document.getElementById('know-results').innerHTML = html;
+}
+
+function pearsonR(x, y) {
+    const n = x.length;
+    const mx = mean(x), my = mean(y);
+    let num = 0, dx2 = 0, dy2 = 0;
+    for (let i = 0; i < n; i++) {
+        const dx = x[i] - mx, dy = y[i] - my;
+        num += dx * dy;
+        dx2 += dx * dx;
+        dy2 += dy * dy;
+    }
+    const denom = Math.sqrt(dx2 * dy2);
+    return denom === 0 ? 0 : num / denom;
+}
+
+// ===== Open-ended =====
+function renderOpenEnded(data) {
+    let html = '<h3 style="font-size:15px; color:var(--green-700); margin-bottom:10px;">What did you like most about FarmLearn?</h3>';
+    html += '<ul class="response-list">';
+    data.forEach(function(d) {
+        if (d.openLike) {
+            html += '<li><span class="pid">' + d.participantId + '</span> ' + escapeHtml(d.openLike) + '</li>';
+        }
+    });
+    html += '</ul>';
+
+    html += '<h3 style="font-size:15px; color:var(--green-700); margin:20px 0 10px;">What would you improve?</h3>';
+    html += '<ul class="response-list">';
+    data.forEach(function(d) {
+        if (d.openImprove) {
+            html += '<li><span class="pid">' + d.participantId + '</span> ' + escapeHtml(d.openImprove) + '</li>';
+        }
+    });
+    html += '</ul>';
+
+    document.getElementById('open-results').innerHTML = html;
+}
+
+function escapeHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ===== Raw data =====
+function renderRaw(data) {
+    let html = '<table class="data-table"><thead><tr>';
+    html += '<th>PID</th><th>Time</th><th>Age</th><th>Gender</th><th>Program</th><th>Year</th>';
+    html += '<th>Prior K.</th><th>SUS</th><th>PU</th><th>PEOU</th><th>Eng.</th><th>Know %</th><th>Duration (s)</th>';
+    html += '</tr></thead><tbody>';
+
+    data.forEach(function(d) {
+        html += '<tr>';
+        html += '<td style="font-family:monospace;font-size:12px;">' + d.participantId + '</td>';
+        html += '<td style="font-size:12px;">' + (d.timestamp ? new Date(d.timestamp).toLocaleString() : '-') + '</td>';
+        html += '<td class="num">' + d.age + '</td>';
+        html += '<td>' + d.gender + '</td>';
+        html += '<td style="font-size:12px; max-width:120px; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(d.studyProgram) + '</td>';
+        html += '<td>' + d.yearOfStudy + '</td>';
+        html += '<td class="num">' + d.priorKnowledge + '</td>';
+        html += '<td class="num">' + fmt(d.susScore,1) + '</td>';
+        html += '<td class="num">' + fmt(d.puMean) + '</td>';
+        html += '<td class="num">' + fmt(d.peouMean) + '</td>';
+        html += '<td class="num">' + fmt(d.engagementMean) + '</td>';
+        html += '<td class="num">' + d.quizAccuracy + '%</td>';
+        html += '<td class="num">' + (d.appDurationSeconds || '-') + '</td>';
+        html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('raw-table').innerHTML = html;
+}
+
+// ===== CHARTS (Canvas) =====
+function renderCharts(data) {
+    drawHistogram('chart-sus', data.map(function(d){return d.susScore;}), 'SUS Score', 0, 100, 10, '#16a34a');
+    drawBarChart('chart-tam', ['PU Mean', 'PEOU Mean', 'Engagement Mean'], [
+        mean(data.map(function(d){return d.puMean;})),
+        mean(data.map(function(d){return d.peouMean;})),
+        mean(data.map(function(d){return d.engagementMean;}))
+    ], 5, ['#16a34a', '#15803d', '#166534']);
+    drawHistogram('chart-knowledge', data.map(function(d){return d.quizAccuracy;}), 'Accuracy (%)', 0, 100, 20, '#2563eb');
+    drawBarChart('chart-prior', ['1 (None)', '2', '3', '4', '5 (Expert)'], [
+        data.filter(function(d){return d.priorKnowledge===1;}).length,
+        data.filter(function(d){return d.priorKnowledge===2;}).length,
+        data.filter(function(d){return d.priorKnowledge===3;}).length,
+        data.filter(function(d){return d.priorKnowledge===4;}).length,
+        data.filter(function(d){return d.priorKnowledge===5;}).length
+    ], null, ['#bbf7d0', '#86efac', '#4ade80', '#22c55e', '#16a34a']);
+}
+
+function drawHistogram(canvasId, values, xlabel, minVal, maxVal, binSize, color) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const pad = { top: 20, right: 20, bottom: 40, left: 50 };
+
+    ctx.clearRect(0, 0, W, H);
+
+    const numBins = Math.ceil((maxVal - minVal) / binSize);
+    const bins = new Array(numBins).fill(0);
+    values.forEach(function(v) {
+        let bi = Math.floor((v - minVal) / binSize);
+        if (bi >= numBins) bi = numBins - 1;
+        if (bi < 0) bi = 0;
+        bins[bi]++;
+    });
+
+    const maxCount = Math.max.apply(null, bins) || 1;
+    const chartW = W - pad.left - pad.right;
+    const chartH = H - pad.top - pad.bottom;
+    const barW = chartW / numBins;
+
+    // Axes
+    ctx.strokeStyle = '#d1d5db';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, pad.top);
+    ctx.lineTo(pad.left, H - pad.bottom);
+    ctx.lineTo(W - pad.right, H - pad.bottom);
+    ctx.stroke();
+
+    // Y gridlines
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'right';
+    const ySteps = 5;
+    for (let i = 0; i <= ySteps; i++) {
+        const yVal = Math.round(maxCount / ySteps * i);
+        const y = H - pad.bottom - (i / ySteps) * chartH;
+        ctx.fillText(yVal, pad.left - 6, y + 4);
+        if (i > 0) {
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.beginPath();
+            ctx.moveTo(pad.left, y);
+            ctx.lineTo(W - pad.right, y);
+            ctx.stroke();
+        }
+    }
+
+    // Bars
+    bins.forEach(function(count, i) {
+        const x = pad.left + i * barW + 2;
+        const bH = (count / maxCount) * chartH;
+        const y = H - pad.bottom - bH;
+
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.8;
+        ctx.fillRect(x, y, barW - 4, bH);
+        ctx.globalAlpha = 1;
+
+        // Label
+        if (count > 0) {
+            ctx.fillStyle = '#374151';
+            ctx.font = '11px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(count, x + (barW - 4) / 2, y - 4);
+        }
+
+        // X label
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(minVal + i * binSize + '-' + (minVal + (i+1) * binSize), x + (barW - 4) / 2, H - pad.bottom + 16);
+    });
+
+    // X axis label
+    ctx.fillStyle = '#374151';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(xlabel, pad.left + chartW / 2, H - 4);
+}
+
+function drawBarChart(canvasId, labels, values, maxY, colors) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const pad = { top: 20, right: 20, bottom: 50, left: 50 };
+
+    ctx.clearRect(0, 0, W, H);
+
+    if (!maxY) maxY = Math.max.apply(null, values) || 1;
+    const chartW = W - pad.left - pad.right;
+    const chartH = H - pad.top - pad.bottom;
+    const barW = chartW / labels.length;
+
+    // Axes
+    ctx.strokeStyle = '#d1d5db';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, pad.top);
+    ctx.lineTo(pad.left, H - pad.bottom);
+    ctx.lineTo(W - pad.right, H - pad.bottom);
+    ctx.stroke();
+
+    // Y labels
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= 5; i++) {
+        const yVal = (maxY / 5 * i);
+        const y = H - pad.bottom - (i / 5) * chartH;
+        ctx.fillText(fmt(yVal, 1), pad.left - 6, y + 4);
+        if (i > 0) {
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.beginPath();
+            ctx.moveTo(pad.left, y);
+            ctx.lineTo(W - pad.right, y);
+            ctx.stroke();
+        }
+    }
+
+    // Bars
+    labels.forEach(function(lbl, i) {
+        const x = pad.left + i * barW + barW * 0.15;
+        const bW = barW * 0.7;
+        const bH = (values[i] / maxY) * chartH;
+        const y = H - pad.bottom - bH;
+
+        ctx.fillStyle = Array.isArray(colors) ? colors[i % colors.length] : colors;
+        ctx.globalAlpha = 0.85;
+        ctx.fillRect(x, y, bW, bH);
+        ctx.globalAlpha = 1;
+
+        // Value on top
+        ctx.fillStyle = '#374151';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(fmt(values[i], 2), x + bW / 2, y - 6);
+
+        // X label
+        ctx.fillStyle = '#4b5563';
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'center';
+
+        // Word wrap for long labels
+        const words = lbl.split(' ');
+        let lineY = H - pad.bottom + 14;
+        let line = '';
+        words.forEach(function(w) {
+            if ((line + ' ' + w).length > 12 && line) {
+                ctx.fillText(line, x + bW / 2, lineY);
+                lineY += 13;
+                line = w;
+            } else {
+                line = line ? line + ' ' + w : w;
+            }
+        });
+        if (line) ctx.fillText(line, x + bW / 2, lineY);
+    });
+}
+
+// ===== EXPORT =====
+function exportJSON() {
+    const data = getData();
+    if (!data.length) { alert('No data to export.'); return; }
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    downloadBlob(blob, 'farmlearn_study_data_' + dateStamp() + '.json');
+}
+
+function exportCSV() {
+    const data = getData();
+    if (!data.length) { alert('No data to export.'); return; }
+
+    const headers = [
+        'participantId','timestamp','appDurationSeconds',
+        'age','gender','studyProgram','yearOfStudy','priorKnowledge','priorEdApps'
+    ];
+
+    // SUS items
+    for (let i = 0; i < 10; i++) headers.push('sus_' + (i+1));
+    headers.push('susScore');
+
+    // PU items
+    for (let i = 0; i < 4; i++) headers.push('pu_' + (i+1));
+    headers.push('puMean');
+
+    // PEOU items
+    for (let i = 0; i < 4; i++) headers.push('peou_' + (i+1));
+    headers.push('peouMean');
+
+    // Engagement items
+    for (let i = 0; i < 5; i++) headers.push('engage_' + (i+1));
+    headers.push('engagementMean');
+
+    headers.push('openLike', 'openImprove');
+
+    // Knowledge
+    for (let i = 0; i < 5; i++) headers.push('kq_' + (i+1) + '_correct');
+    headers.push('knowledgeCorrect', 'knowledgePct');
+
+    let csv = headers.join(',') + '\n';
+
+    data.forEach(function(d) {
+        const row = [
+            d.participantId,
+            d.timestamp,
+            d.appDurationSeconds || ''
+        ];
+        row.push(d.age, d.gender, '"' + (d.studyProgram||'').replace(/"/g,'""') + '"', d.yearOfStudy, d.priorKnowledge, d.priorEdApps);
+
+        d.sus.forEach(function(v){row.push(v);});
+        row.push(fmt(d.susScore,2));
+
+        d.pu.forEach(function(v){row.push(v);});
+        row.push(fmt(d.puMean,4));
+
+        d.peou.forEach(function(v){row.push(v);});
+        row.push(fmt(d.peouMean,4));
+
+        d.engagement.forEach(function(v){row.push(v);});
+        row.push(fmt(d.engagementMean,4));
+
+        row.push('"' + (d.openLike||'').replace(/"/g,'""') + '"');
+        row.push('"' + (d.openImprove||'').replace(/"/g,'""') + '"');
+
+        d.knowledgeAnswers.forEach(function(ka){row.push(ka.isCorrect ? 1 : 0);});
+        row.push(d.knowledgeCorrect, d.knowledgePct);
+
+        csv += row.join(',') + '\n';
+    });
+
+    const blob = new Blob([csv], {type: 'text/csv'});
+    downloadBlob(blob, 'farmlearn_study_data_' + dateStamp() + '.csv');
+}
+
+function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function dateStamp() {
+    return new Date().toISOString().slice(0,10);
+}
+
+// ===== COPY TABLE =====
+function copyTable(containerId) {
+    const container = document.getElementById(containerId);
+    const table = container.querySelector('table');
+    if (!table) { alert('No table to copy.'); return; }
+
+    let text = '';
+    const rows = table.querySelectorAll('tr');
+    rows.forEach(function(row) {
+        const cells = row.querySelectorAll('th, td');
+        const vals = [];
+        cells.forEach(function(cell) {
+            vals.push(cell.textContent.trim().replace(/\s+/g, ' '));
+        });
+        text += vals.join('\t') + '\n';
+    });
+
+    navigator.clipboard.writeText(text).then(function() {
+        alert('Table copied to clipboard (tab-separated). Paste into Excel or Word.');
+    }).catch(function() {
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert('Table copied to clipboard.');
+    });
+}
+
+// ===== IMPORT =====
+function importData() {
+    alert('Import is not supported in server mode. Data comes from the database automatically.');
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', loadData);
+</script>
+
+</body>
+</html>
