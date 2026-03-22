@@ -18,8 +18,8 @@
             appearance: none;
         }
         body { background: linear-gradient(to bottom, #f0fdf4, #dcfce7); min-height: 100vh; }
-        .screen { display: none; min-height: 100vh; }
-        .screen.active { display: flex; flex-direction: column; }
+        .screen { display: none !important; min-height: 100vh; position: relative; }
+        .screen.active { display: flex !important; flex-direction: column; }
 
         .btn {
             padding: 16px 24px;
@@ -116,7 +116,7 @@
         .log-item.correct { background: #d7ffb8; }
         .log-item.wrong { background: #ffdfe0; }
 
-        .level-complete-screen { min-height: 100vh; display: flex; flex-direction: column; }
+        .level-complete-screen.active { min-height: 100vh; flex-direction: column; }
         .level-complete-screen.success { background: #f0fdf4; }
         .level-complete-screen.fail { background: #fff7f7; }
         .lc-header { padding: 48px 24px 32px; text-align: center; border-radius: 0 0 32px 32px; position: relative; }
