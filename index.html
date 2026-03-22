@@ -434,16 +434,36 @@
                 <div class="survey-q" data-name="peou3"><label>3. The interface is clear and understandable.</label><div class="survey-scale"></div></div>
                 <div class="survey-q" data-name="peou4"><label>4. Overall, I find FarmLearn easy to use.</label><div class="survey-scale"></div></div>
 
-                <h3 style="color:#166534; margin:20px 0 12px;">Engagement</h3>
-                <div class="survey-q" data-name="eng1"><label>1. The game-like elements motivated me to continue.</label><div class="survey-scale"></div></div>
-                <div class="survey-q" data-name="eng2"><label>2. The immediate feedback helped me learn.</label><div class="survey-scale"></div></div>
-                <div class="survey-q" data-name="eng3"><label>3. The time limit added positive pressure.</label><div class="survey-scale"></div></div>
-                <div class="survey-q" data-name="eng4"><label>4. I would recommend this app to farmers.</label><div class="survey-scale"></div></div>
+                <h3 style="color:#166534; margin:20px 0 12px;">Engagement & Gamification</h3>
+                <div class="survey-q" data-name="eng1"><label>1. The game-like elements (levels, progress) motivated me to continue.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="eng2"><label>2. The immediate feedback after each question helped me learn.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="eng3"><label>3. The time limit added positive pressure to the experience.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="eng4"><label>4. I would recommend this app to people interested in farming.</label><div class="survey-scale"></div></div>
                 <div class="survey-q" data-name="eng5"><label>5. I learned new farming knowledge from this app.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="eng6"><label>6. The level progression (unlocking new levels) kept me engaged.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="eng7"><label>7. The explanations after each answer were helpful for learning.</label><div class="survey-scale"></div></div>
+
+                <h3 style="color:#166534; margin:20px 0 12px;">Behavioral Intention</h3>
+                <p style="color:#888; font-size:13px; margin-bottom:12px;">1 = Strongly Disagree, 5 = Strongly Agree</p>
+                <div class="survey-q" data-name="bi1"><label>1. I intend to use FarmLearn in the future if available.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="bi2"><label>2. I would use FarmLearn to prepare for farming-related courses.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="bi3"><label>3. I would recommend FarmLearn to a friend or colleague.</label><div class="survey-scale"></div></div>
+
+                <h3 style="color:#166534; margin:20px 0 12px;">Learning Effectiveness</h3>
+                <div class="survey-q" data-name="le1"><label>1. I feel more confident about my farming knowledge after using FarmLearn.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="le2"><label>2. The quiz format helped me remember information better than reading.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="le3"><label>3. The content difficulty was appropriate for learning.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="le4"><label>4. I can recall specific farming facts I learned from FarmLearn.</label><div class="survey-scale"></div></div>
+
+                <h3 style="color:#166534; margin:20px 0 12px;">Content Quality</h3>
+                <div class="survey-q" data-name="cq1"><label>1. The farming information presented was accurate and trustworthy.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="cq2"><label>2. The topics covered (beans, cashew, maize, tomato, drought) were relevant.</label><div class="survey-scale"></div></div>
+                <div class="survey-q" data-name="cq3"><label>3. The questions were clear and easy to understand.</label><div class="survey-scale"></div></div>
 
                 <h3 style="color:#166534; margin:20px 0 12px;">Your Thoughts</h3>
-                <textarea id="surveyLike" placeholder="What did you like most?" style="width:100%; padding:12px; border:2px solid #e5e7eb; border-radius:12px; font-size:15px; min-height:60px; resize:vertical; margin-bottom:12px;"></textarea>
-                <textarea id="surveyImprove" placeholder="What would you improve?" style="width:100%; padding:12px; border:2px solid #e5e7eb; border-radius:12px; font-size:15px; min-height:60px; resize:vertical;"></textarea>
+                <textarea id="surveyLike" placeholder="What did you like most about FarmLearn?" style="width:100%; padding:12px; border:2px solid #e5e7eb; border-radius:12px; font-size:15px; min-height:60px; resize:vertical; margin-bottom:12px;"></textarea>
+                <textarea id="surveyImprove" placeholder="What would you improve or change?" style="width:100%; padding:12px; border:2px solid #e5e7eb; border-radius:12px; font-size:15px; min-height:60px; resize:vertical; margin-bottom:12px;"></textarea>
+                <textarea id="surveyLearn" placeholder="What is the most interesting thing you learned?" style="width:100%; padding:12px; border:2px solid #e5e7eb; border-radius:12px; font-size:15px; min-height:60px; resize:vertical;"></textarea>
 
                 <div id="surveyError" style="display:none; color:#ef4444; text-align:center; margin-top:12px; font-weight:600;">Please answer all scale questions.</div>
                 <button class="btn btn-green" onclick="submitSurvey()" style="margin-top:16px; width:100%;">SUBMIT SURVEY</button>
@@ -1077,7 +1097,10 @@
                 'sus1','sus2','sus3','sus4','sus5','sus6','sus7','sus8','sus9','sus10',
                 'pu1','pu2','pu3','pu4',
                 'peou1','peou2','peou3','peou4',
-                'eng1','eng2','eng3','eng4','eng5'
+                'eng1','eng2','eng3','eng4','eng5','eng6','eng7',
+                'bi1','bi2','bi3',
+                'le1','le2','le3','le4',
+                'cq1','cq2','cq3'
             ];
 
             const values = {};
@@ -1109,12 +1132,16 @@
 
             const puMean = Math.round((values.pu1 + values.pu2 + values.pu3 + values.pu4) / 4 * 100) / 100;
             const peouMean = Math.round((values.peou1 + values.peou2 + values.peou3 + values.peou4) / 4 * 100) / 100;
-            const engMean = Math.round((values.eng1 + values.eng2 + values.eng3 + values.eng4 + values.eng5) / 5 * 100) / 100;
+            const engMean = Math.round((values.eng1 + values.eng2 + values.eng3 + values.eng4 + values.eng5 + values.eng6 + values.eng7) / 7 * 100) / 100;
+            const biMean = Math.round((values.bi1 + values.bi2 + values.bi3) / 3 * 100) / 100;
+            const leMean = Math.round((values.le1 + values.le2 + values.le3 + values.le4) / 4 * 100) / 100;
+            const cqMean = Math.round((values.cq1 + values.cq2 + values.cq3) / 3 * 100) / 100;
 
             send({ action: 'survey', participantId: uniqueId, name: userName,
-                ...values, susScore, puMean, peouMean, engMean,
+                ...values, susScore, puMean, peouMean, engMean, biMean, leMean, cqMean,
                 openLike: document.getElementById('surveyLike').value.trim(),
-                openImprove: document.getElementById('surveyImprove').value.trim()
+                openImprove: document.getElementById('surveyImprove').value.trim(),
+                openLearn: document.getElementById('surveyLearn').value.trim()
             });
 
             showScreen('thankYouScreen');
