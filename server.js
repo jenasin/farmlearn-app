@@ -99,4 +99,16 @@ app.get('/api/export/json', async (req, res) => {
   })));
 });
 
-app.listen(PORT, () => console.log(`FarmLearn running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`FarmLearn running on port ${PORT}`);
+
+  // Keep alive - ping every 14 min to prevent Render free tier sleep
+  const KEEP_ALIVE_URL = process.env.RENDER_EXTERNAL_URL || process.env.KEEP_ALIVE_URL;
+  if (KEEP_ALIVE_URL) {
+    setInterval(() => {
+      fetch(KEEP_ALIVE_URL + '/api/export/json').catch(() => {});
+      console.log('Keep-alive ping sent');
+    }, 14 * 60 * 1000);
+    console.log('Keep-alive enabled: pinging every 14 min');
+  }
+});
