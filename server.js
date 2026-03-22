@@ -1,35 +1,34 @@
 const express = require('express');
-const { createClient } = require('@libsql/client');
+const { Pool } = require('pg');
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Turso cloud database (persistent) or local SQLite fallback
-const db = createClient({
-  url: process.env.TURSO_URL || 'file:data.db',
-  authToken: process.env.TURSO_AUTH_TOKEN || undefined
+// PostgreSQL (Render free) or crash if not set
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
 // Create table
 (async () => {
-  await db.execute(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS events (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      timestamp TEXT DEFAULT (datetime('now')),
+      id SERIAL PRIMARY KEY,
+      timestamp TIMESTAMPTZ DEFAULT NOW(),
       action TEXT,
       participant_id TEXT,
       name TEXT,
-      data TEXT
+      data JSONB
     )
   `);
-  console.log('Database ready' + (process.env.TURSO_URL ? ' (Turso cloud)' : ' (local file)'));
+  console.log('PostgreSQL ready');
 })();
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.text({ type: 'text/plain', limit: '1mb' }));
 
-// CORS
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', '*');
@@ -37,38 +36,36 @@ app.use((req, res, next) => {
   next();
 });
 
-// Static files
 app.use(express.static(path.join(__dirname, '.')));
 
 // Save data
 app.post('/api/save', async (req, res) => {
   try {
     let data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    await db.execute({
-      sql: 'INSERT INTO events (action, participant_id, name, data) VALUES (?, ?, ?, ?)',
-      args: [data.action || '', data.participantId || data.uniqueId || '', data.name || '', JSON.stringify(data)]
-    });
+    await pool.query(
+      'INSERT INTO events (action, participant_id, name, data) VALUES ($1, $2, $3, $4)',
+      [data.action || '', data.participantId || data.uniqueId || '', data.name || '', JSON.stringify(data)]
+    );
     res.json({ ok: true });
   } catch (e) {
     res.json({ ok: false, error: e.message });
   }
 });
 
-// Admin - view all data
+// Admin
 app.get('/admin', async (req, res) => {
-  const result = await db.execute('SELECT * FROM events ORDER BY id DESC LIMIT 500');
-  const events = result.rows;
-  const statsResult = await db.execute("SELECT COUNT(DISTINCT participant_id) as participants, COUNT(*) as total_events, COUNT(CASE WHEN action='answer' THEN 1 END) as answers, COUNT(CASE WHEN action='survey' THEN 1 END) as surveys FROM events");
-  const stats = statsResult.rows[0];
+  const { rows: events } = await pool.query('SELECT * FROM events ORDER BY id DESC LIMIT 500');
+  const { rows: [stats] } = await pool.query("SELECT COUNT(DISTINCT participant_id) as participants, COUNT(*) as total_events, COUNT(CASE WHEN action='answer' THEN 1 END) as answers, COUNT(CASE WHEN action='survey' THEN 1 END) as surveys FROM events");
 
   const rows = events.map(e => {
-    const d = JSON.parse(e.data || '{}');
+    const d = typeof e.data === 'string' ? JSON.parse(e.data) : (e.data || {});
     let detail = '';
     if (e.action === 'register') detail = `${d.country || ''} age:${d.age || '?'} ${d.gender || ''} farm:${d.farmKnowledge || '?'} app:${d.appExperience || '?'}`;
     if (e.action === 'answer') detail = `${d.moduleName} L${d.level} Q${d.questionIndex} ${d.isCorrect ? 'OK' : 'WRONG'} ${d.responseTimeSec}s`;
     if (e.action === 'survey') detail = `SUS:${d.susScore} PU:${d.puMean} PEOU:${d.peouMean} ENG:${d.engMean}`;
     if (e.action === 'progress') detail = `${d.correct}/${d.total} (${d.accuracy}%) ${d.levelsCompleted} levels`;
-    return `<tr><td>${e.id}</td><td>${e.timestamp}</td><td><b>${e.action}</b></td><td>${e.name}</td><td style="font-size:12px">${detail}</td></tr>`;
+    const ts = e.timestamp ? new Date(e.timestamp).toISOString().replace('T',' ').slice(0,19) : '';
+    return `<tr><td>${e.id}</td><td>${ts}</td><td><b>${e.action}</b></td><td>${e.name}</td><td style="font-size:12px">${detail}</td></tr>`;
   }).join('');
 
   res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>FarmLearn Admin</title>
@@ -81,10 +78,12 @@ app.get('/admin', async (req, res) => {
 
 // Export CSV
 app.get('/api/export/csv', async (req, res) => {
-  const result = await db.execute('SELECT * FROM events ORDER BY id');
+  const { rows } = await pool.query('SELECT * FROM events ORDER BY id');
   let csv = 'id,timestamp,action,participant_id,name,data\n';
-  result.rows.forEach(e => {
-    csv += `${e.id},${e.timestamp},${e.action},"${e.participant_id}","${(e.name||'').replace(/"/g,'""')}","${(e.data||'').replace(/"/g,'""')}"\n`;
+  rows.forEach(e => {
+    const ts = e.timestamp ? new Date(e.timestamp).toISOString() : '';
+    const dataStr = typeof e.data === 'object' ? JSON.stringify(e.data) : (e.data || '');
+    csv += `${e.id},${ts},${e.action},"${e.participant_id}","${(e.name||'').replace(/"/g,'""')}","${dataStr.replace(/"/g,'""')}"\n`;
   });
   res.header('Content-Type', 'text/csv');
   res.header('Content-Disposition', 'attachment; filename=farmlearn_export.csv');
@@ -93,8 +92,11 @@ app.get('/api/export/csv', async (req, res) => {
 
 // Export JSON
 app.get('/api/export/json', async (req, res) => {
-  const result = await db.execute('SELECT * FROM events ORDER BY id');
-  res.json(result.rows.map(e => ({ ...e, data: JSON.parse(e.data || '{}') })));
+  const { rows } = await pool.query('SELECT * FROM events ORDER BY id');
+  res.json(rows.map(e => ({
+    ...e,
+    data: typeof e.data === 'string' ? JSON.parse(e.data) : (e.data || {})
+  })));
 });
 
 app.listen(PORT, () => console.log(`FarmLearn running on port ${PORT}`));
