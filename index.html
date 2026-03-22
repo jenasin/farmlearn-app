@@ -200,10 +200,11 @@
                     <p style="color:#374151;"><strong>Total time:</strong> approximately 20-25 minutes.</p>
                     <p style="color:#666; margin-top:8px;">Your responses are <strong>anonymous</strong> and used only for research.</p>
 
-                    <div style="display:flex; gap:12px; align-items:flex-start; padding:14px; background:#fef3c7; border-radius:12px; margin:16px 0; border:2px solid #f59e0b;">
-                        <input type="checkbox" id="consentCheck" style="width:22px; height:22px; margin-top:2px; flex-shrink:0; accent-color:#16a34a;">
-                        <label for="consentCheck" style="font-size:14px; color:#374151;">I understand the purpose of this study and I voluntarily agree to participate. I can withdraw at any time.</label>
+                    <div id="consentBox" onclick="toggleConsent()" style="padding:14px; background:#fef3c7; border-radius:12px; margin:16px 0; border:3px solid #f59e0b; cursor:pointer; display:flex; gap:12px; align-items:center; transition:all 0.2s;">
+                        <div id="consentIcon" style="width:28px; height:28px; border-radius:6px; border:3px solid #d1d5db; background:#fff; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; transition:all 0.2s;"></div>
+                        <span style="font-size:14px; color:#374151;">I understand the purpose of this study and I voluntarily agree to participate. I can withdraw at any time.</span>
                     </div>
+                    <input type="hidden" id="consentCheck" value="0">
 
                     <div style="font-weight:bold; margin-bottom:8px;">👤 Your name:</div>
                     <input type="text" id="nameInput" placeholder="Enter your name..." minlength="2" required inputmode="text" autocomplete="off" autocapitalize="words">
@@ -574,11 +575,33 @@
         }
 
         // ========== START TEST ==========
+        function toggleConsent() {
+            const input = document.getElementById('consentCheck');
+            const icon = document.getElementById('consentIcon');
+            const box = document.getElementById('consentBox');
+            if (input.value === '0') {
+                input.value = '1';
+                icon.textContent = '✓';
+                icon.style.background = '#16a34a';
+                icon.style.borderColor = '#16a34a';
+                icon.style.color = 'white';
+                box.style.background = '#dcfce7';
+                box.style.borderColor = '#16a34a';
+            } else {
+                input.value = '0';
+                icon.textContent = '';
+                icon.style.background = '#fff';
+                icon.style.borderColor = '#d1d5db';
+                box.style.background = '#fef3c7';
+                box.style.borderColor = '#f59e0b';
+            }
+        }
+
         function startTest() {
             const nameError = document.getElementById('nameError');
             const nameInput = document.getElementById('nameInput');
 
-            if (!document.getElementById('consentCheck').checked) {
+            if (document.getElementById('consentCheck').value !== '1') {
                 nameError.textContent = '⚠️ Please check the consent box to continue.';
                 nameError.style.display = 'block';
                 return;
@@ -1000,7 +1023,12 @@
             initSurveyScales();
 
             // Reset demographics
-            document.getElementById('consentCheck').checked = false;
+            document.getElementById('consentCheck').value = '0';
+            document.getElementById('consentIcon').textContent = '';
+            document.getElementById('consentIcon').style.background = '#fff';
+            document.getElementById('consentIcon').style.borderColor = '#d1d5db';
+            document.getElementById('consentBox').style.background = '#fef3c7';
+            document.getElementById('consentBox').style.borderColor = '#f59e0b';
             document.getElementById('preCountry').value = '';
             document.getElementById('preCountryOther').value = '';
             document.getElementById('preCountryOtherBox').style.display = 'none';
