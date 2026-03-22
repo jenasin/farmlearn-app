@@ -14,8 +14,17 @@
             -webkit-user-select: text !important;
             user-select: text !important;
             pointer-events: auto !important;
+        }
+        input[type="text"], input[type="number"] {
             -webkit-appearance: none;
             appearance: none;
+        }
+        input[type="checkbox"] {
+            -webkit-appearance: checkbox;
+            appearance: checkbox;
+            width: 22px;
+            height: 22px;
+            accent-color: #16a34a;
         }
         body { background: linear-gradient(to bottom, #f0fdf4, #dcfce7); min-height: 100vh; }
         .screen { display: none !important; min-height: 100vh; position: relative; }
