@@ -377,11 +377,11 @@
         <button onclick="showTab('tab-sus')">SUS</button>
         <button onclick="showTab('tab-tam')">TAM</button>
         <button onclick="showTab('tab-engagement')">Engagement</button>
-        <button onclick="showTab('tab-knowledge')">Knowledge</button>
+        <button onclick="showTab('tab-knowledge')">Quiz Performance</button>
         <button onclick="showTab('tab-open')">Open-Ended</button>
         <button onclick="showTab('tab-charts')">Charts</button>
+        <button onclick="showTab('tab-individual')">Individual</button>
         <button onclick="showTab('tab-raw')">Raw Data</button>
-        <button onclick="showTab('tab-import')">Import</button>
     </div>
 
     <div id="noData" class="no-data" style="display:none;">
@@ -461,24 +461,46 @@
             <h2>Visual Summary</h2>
             <div class="chart-row">
                 <div class="chart-container">
-                    <h3 style="font-size:14px; color:var(--gray-600); margin-bottom:8px;">SUS Score Distribution</h3>
-                    <canvas id="chart-sus" width="400" height="250"></canvas>
+                    <h3 style="font-size:14px; color:var(--gray-600); margin-bottom:8px;">Radar: Mean Scores by Scale</h3>
+                    <canvas id="chart-radar" width="400" height="350"></canvas>
                 </div>
                 <div class="chart-container">
-                    <h3 style="font-size:14px; color:var(--gray-600); margin-bottom:8px;">TAM & Engagement Means</h3>
-                    <canvas id="chart-tam" width="400" height="250"></canvas>
+                    <h3 style="font-size:14px; color:var(--gray-600); margin-bottom:8px;">SUS Score Distribution</h3>
+                    <canvas id="chart-sus" width="400" height="250"></canvas>
                 </div>
             </div>
             <div class="chart-row" style="margin-top:20px;">
                 <div class="chart-container">
-                    <h3 style="font-size:14px; color:var(--gray-600); margin-bottom:8px;">Knowledge Test Scores</h3>
+                    <h3 style="font-size:14px; color:var(--gray-600); margin-bottom:8px;">TAM, Engagement & Other Means</h3>
+                    <canvas id="chart-tam" width="400" height="250"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 style="font-size:14px; color:var(--gray-600); margin-bottom:8px;">Quiz Accuracy Distribution</h3>
                     <canvas id="chart-knowledge" width="400" height="250"></canvas>
                 </div>
+            </div>
+            <div class="chart-row" style="margin-top:20px;">
                 <div class="chart-container">
                     <h3 style="font-size:14px; color:var(--gray-600); margin-bottom:8px;">Prior Knowledge Distribution</h3>
                     <canvas id="chart-prior" width="400" height="250"></canvas>
                 </div>
+                <div class="chart-container">
+                    <h3 style="font-size:14px; color:var(--gray-600); margin-bottom:8px;">SUS Score per Participant</h3>
+                    <canvas id="chart-sus-participants" width="400" height="250"></canvas>
+                </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Individual -->
+    <div class="tab-content" id="tab-individual">
+        <div class="table-section">
+            <h2>Individual Participant Detail</h2>
+            <div class="table-desc">Select a participant to view their results</div>
+            <select id="individualSelect" onchange="renderIndividual()" style="width:100%; padding:10px; font-size:16px; border:2px solid var(--green-200); border-radius:8px; margin-bottom:16px;">
+                <option value="">-- Select participant --</option>
+            </select>
+            <div id="individual-detail"></div>
         </div>
     </div>
 
@@ -590,6 +612,7 @@ async function loadData() {
 
             cachedData.push({
                 participantId: pid,
+                name: reg.name || s.name || '',
                 timestamp: s.timestamp || reg.timestamp || '',
                 appDurationSeconds: prog.duration || 0,
                 age: parseInt(reg.age) || 0,
@@ -614,6 +637,15 @@ async function loadData() {
 
                 openLike: s.openLike || '',
                 openImprove: s.openImprove || '',
+                openLearn: s.openLearn || '',
+
+                // New scales
+                bi: [s.bi1, s.bi2, s.bi3].map(Number),
+                biMean: Number(s.biMean) || 0,
+                le: [s.le1, s.le2, s.le3, s.le4].map(Number),
+                leMean: Number(s.leMean) || 0,
+                cq: [s.cq1, s.cq2, s.cq3].map(Number),
+                cqMean: Number(s.cqMean) || 0,
 
                 // Quiz results from progress
                 quizTotal: prog.total || 0,
@@ -752,6 +784,9 @@ function render() {
     const peouMeans = data.map(function(d){return d.peouMean;});
     const engMeans = data.map(function(d){return d.engagementMean;});
     const quizAccs = data.map(function(d){return d.quizAccuracy;});
+    const biMeans = data.map(function(d){return d.biMean || 0;});
+    const leMeans = data.map(function(d){return d.leMean || 0;});
+    const cqMeans = data.map(function(d){return d.cqMean || 0;});
 
     document.getElementById('summaryCards').innerHTML =
         summaryCard(n, 'Participants') +
@@ -759,6 +794,9 @@ function render() {
         summaryCard(fmt(mean(puMeans),2), 'Mean PU') +
         summaryCard(fmt(mean(peouMeans),2), 'Mean PEOU') +
         summaryCard(fmt(mean(engMeans),2), 'Mean Engagement') +
+        summaryCard(fmt(mean(biMeans),2), 'Mean BI') +
+        summaryCard(fmt(mean(leMeans),2), 'Mean Learning') +
+        summaryCard(fmt(mean(cqMeans),2), 'Mean Content Q.') +
         summaryCard(fmt(mean(quizAccs),1) + '%', 'Mean Quiz Accuracy');
 
     // ===== TABLE 1: Demographics =====
@@ -1017,24 +1055,18 @@ function pearsonR(x, y) {
 
 // ===== Open-ended =====
 function renderOpenEnded(data) {
-    let html = '<h3 style="font-size:15px; color:var(--green-700); margin-bottom:10px;">What did you like most about FarmLearn?</h3>';
-    html += '<ul class="response-list">';
-    data.forEach(function(d) {
-        if (d.openLike) {
-            html += '<li><span class="pid">' + d.participantId + '</span> ' + escapeHtml(d.openLike) + '</li>';
-        }
-    });
-    html += '</ul>';
-
-    html += '<h3 style="font-size:15px; color:var(--green-700); margin:20px 0 10px;">What would you improve?</h3>';
-    html += '<ul class="response-list">';
-    data.forEach(function(d) {
-        if (d.openImprove) {
-            html += '<li><span class="pid">' + d.participantId + '</span> ' + escapeHtml(d.openImprove) + '</li>';
-        }
-    });
-    html += '</ul>';
-
+    function renderQ(title, field) {
+        let h = '<h3 style="font-size:15px; color:var(--green-700); margin:20px 0 10px;">' + title + '</h3>';
+        h += '<ul class="response-list">';
+        data.forEach(function(d) {
+            if (d[field]) h += '<li><span class="pid">' + escapeHtml(d.participantId.slice(-6)) + '</span> <strong>' + escapeHtml(d.name || '') + ':</strong> ' + escapeHtml(d[field]) + '</li>';
+        });
+        h += '</ul>';
+        return h;
+    }
+    let html = renderQ('What did you like most about FarmLearn?', 'openLike');
+    html += renderQ('What would you improve or change?', 'openImprove');
+    html += renderQ('What is the most interesting thing you learned?', 'openLearn');
     document.getElementById('open-results').innerHTML = html;
 }
 
@@ -1073,12 +1105,28 @@ function renderRaw(data) {
 
 // ===== CHARTS (Canvas) =====
 function renderCharts(data) {
+    // Radar chart - mean scores normalized to 5
+    drawRadarChart('chart-radar',
+        ['SUS\n(norm)', 'PU', 'PEOU', 'Engage', 'BI', 'Learning', 'Content Q.'],
+        [mean(data.map(function(d){return d.susScore/20;})),
+         mean(data.map(function(d){return d.puMean;})),
+         mean(data.map(function(d){return d.peouMean;})),
+         mean(data.map(function(d){return d.engagementMean;})),
+         mean(data.map(function(d){return d.biMean || 0;})),
+         mean(data.map(function(d){return d.leMean || 0;})),
+         mean(data.map(function(d){return d.cqMean || 0;}))],
+        5
+    );
+
     drawHistogram('chart-sus', data.map(function(d){return d.susScore;}), 'SUS Score', 0, 100, 10, '#16a34a');
-    drawBarChart('chart-tam', ['PU Mean', 'PEOU Mean', 'Engagement Mean'], [
+    drawBarChart('chart-tam', ['PU', 'PEOU', 'Engage', 'BI', 'Learning', 'Content'], [
         mean(data.map(function(d){return d.puMean;})),
         mean(data.map(function(d){return d.peouMean;})),
-        mean(data.map(function(d){return d.engagementMean;}))
-    ], 5, ['#16a34a', '#15803d', '#166534']);
+        mean(data.map(function(d){return d.engagementMean;})),
+        mean(data.map(function(d){return d.biMean || 0;})),
+        mean(data.map(function(d){return d.leMean || 0;})),
+        mean(data.map(function(d){return d.cqMean || 0;}))
+    ], 5, ['#16a34a', '#15803d', '#166534', '#22c55e', '#4ade80', '#86efac']);
     drawHistogram('chart-knowledge', data.map(function(d){return d.quizAccuracy;}), 'Accuracy (%)', 0, 100, 20, '#2563eb');
     drawBarChart('chart-prior', ['1 (None)', '2', '3', '4', '5 (Expert)'], [
         data.filter(function(d){return d.priorKnowledge===1;}).length,
@@ -1087,6 +1135,185 @@ function renderCharts(data) {
         data.filter(function(d){return d.priorKnowledge===4;}).length,
         data.filter(function(d){return d.priorKnowledge===5;}).length
     ], null, ['#bbf7d0', '#86efac', '#4ade80', '#22c55e', '#16a34a']);
+
+    // SUS per participant
+    drawBarChart('chart-sus-participants',
+        data.map(function(d){return d.name || d.participantId.slice(-6);}),
+        data.map(function(d){return d.susScore;}),
+        100, data.map(function(d){return d.susScore >= 68 ? '#16a34a' : d.susScore >= 50 ? '#f59e0b' : '#ef4444';})
+    );
+
+    // Populate individual select
+    var sel = document.getElementById('individualSelect');
+    sel.innerHTML = '<option value="">-- Select participant --</option>';
+    data.forEach(function(d, i) {
+        sel.innerHTML += '<option value="' + i + '">' + escapeHtml(d.name || d.participantId) + ' (SUS: ' + fmt(d.susScore,0) + ')</option>';
+    });
+}
+
+// ===== RADAR CHART =====
+function drawRadarChart(canvasId, labels, values, maxVal) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var W = canvas.width, H = canvas.height;
+    var cx = W/2, cy = H/2 + 10;
+    var R = Math.min(W, H) / 2 - 50;
+    var n = labels.length;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Grid
+    for (var ring = 1; ring <= 5; ring++) {
+        var r = R * ring / 5;
+        ctx.beginPath();
+        for (var i = 0; i <= n; i++) {
+            var angle = (Math.PI * 2 * i / n) - Math.PI/2;
+            var x = cx + r * Math.cos(angle);
+            var y = cy + r * Math.sin(angle);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        // Label
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(fmt(maxVal * ring / 5, 1), cx + 14, cy - r + 4);
+    }
+
+    // Axes
+    for (var i = 0; i < n; i++) {
+        var angle = (Math.PI * 2 * i / n) - Math.PI/2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + R * Math.cos(angle), cy + R * Math.sin(angle));
+        ctx.strokeStyle = '#d1d5db';
+        ctx.stroke();
+
+        // Label
+        var lx = cx + (R + 30) * Math.cos(angle);
+        var ly = cy + (R + 30) * Math.sin(angle);
+        ctx.fillStyle = '#374151';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        var lines = labels[i].split('\n');
+        lines.forEach(function(line, li) {
+            ctx.fillText(line, lx, ly + li * 14 - (lines.length-1) * 7);
+        });
+    }
+
+    // Data polygon
+    ctx.beginPath();
+    for (var i = 0; i <= n; i++) {
+        var idx = i % n;
+        var angle = (Math.PI * 2 * idx / n) - Math.PI/2;
+        var v = Math.min(values[idx], maxVal);
+        var r = R * v / maxVal;
+        var x = cx + r * Math.cos(angle);
+        var y = cy + r * Math.sin(angle);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.fillStyle = 'rgba(22, 163, 74, 0.2)';
+    ctx.fill();
+    ctx.strokeStyle = '#16a34a';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Data points + values
+    for (var i = 0; i < n; i++) {
+        var angle = (Math.PI * 2 * i / n) - Math.PI/2;
+        var v = Math.min(values[i], maxVal);
+        var r = R * v / maxVal;
+        var x = cx + r * Math.cos(angle);
+        var y = cy + r * Math.sin(angle);
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI*2);
+        ctx.fillStyle = '#16a34a';
+        ctx.fill();
+        ctx.fillStyle = '#166534';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.fillText(fmt(values[i], 2), x, y - 10);
+    }
+}
+
+// ===== INDIVIDUAL PARTICIPANT =====
+function renderIndividual() {
+    var sel = document.getElementById('individualSelect');
+    var idx = parseInt(sel.value);
+    var container = document.getElementById('individual-detail');
+    if (isNaN(idx)) { container.innerHTML = ''; return; }
+
+    var d = cachedData[idx];
+    var html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">';
+
+    // Info card
+    html += '<div style="background:var(--green-50); padding:16px; border-radius:10px;">';
+    html += '<h3 style="color:var(--green-800); margin-bottom:8px;">' + escapeHtml(d.name || d.participantId) + '</h3>';
+    html += '<p>Age: <strong>' + d.age + '</strong></p>';
+    html += '<p>Gender: <strong>' + d.gender + '</strong></p>';
+    html += '<p>Country: <strong>' + (d.country || '-') + '</strong></p>';
+    html += '<p>Program: <strong>' + escapeHtml(d.studyProgram || '-') + '</strong></p>';
+    html += '<p>Prior farming: <strong>' + d.priorKnowledge + '/5</strong></p>';
+    html += '</div>';
+
+    // Scores card
+    html += '<div style="background:white; padding:16px; border-radius:10px; border:1px solid var(--gray-200);">';
+    html += '<h3 style="color:var(--green-800); margin-bottom:8px;">Scores</h3>';
+    html += scoreRow('SUS Score', d.susScore, 100, d.susScore >= 68 ? 'green' : d.susScore >= 50 ? 'amber' : 'red');
+    html += scoreRow('PU', d.puMean, 5);
+    html += scoreRow('PEOU', d.peouMean, 5);
+    html += scoreRow('Engagement', d.engagementMean, 5);
+    html += scoreRow('Behavioral Int.', d.biMean, 5);
+    html += scoreRow('Learning Eff.', d.leMean, 5);
+    html += scoreRow('Content Quality', d.cqMean, 5);
+    html += scoreRow('Quiz Accuracy', d.quizAccuracy, 100);
+    html += '</div></div>';
+
+    // Radar for this individual
+    html += '<canvas id="chart-individual-radar" width="500" height="350" style="max-width:100%;"></canvas>';
+
+    // Open-ended
+    if (d.openLike || d.openImprove || d.openLearn) {
+        html += '<div style="margin-top:16px;">';
+        if (d.openLike) html += '<div style="background:#f0fdf4; padding:12px; border-radius:8px; margin-bottom:8px; border-left:3px solid var(--green-400);"><strong>Liked:</strong> ' + escapeHtml(d.openLike) + '</div>';
+        if (d.openImprove) html += '<div style="background:#fefce8; padding:12px; border-radius:8px; margin-bottom:8px; border-left:3px solid #f59e0b;"><strong>Improve:</strong> ' + escapeHtml(d.openImprove) + '</div>';
+        if (d.openLearn) html += '<div style="background:#eff6ff; padding:12px; border-radius:8px; margin-bottom:8px; border-left:3px solid #3b82f6;"><strong>Learned:</strong> ' + escapeHtml(d.openLearn) + '</div>';
+        html += '</div>';
+    }
+
+    // Raw scores table
+    html += '<h3 style="margin-top:16px; color:var(--green-800);">All Scale Responses</h3>';
+    html += '<table class="data-table" style="margin-top:8px;"><thead><tr><th>Scale</th><th>Items</th><th class="num">Mean</th></tr></thead><tbody>';
+    html += '<tr><td>SUS (1-10)</td><td>' + d.sus.join(', ') + '</td><td class="num">' + fmt(d.susScore,1) + '/100</td></tr>';
+    html += '<tr><td>PU (1-4)</td><td>' + d.pu.join(', ') + '</td><td class="num">' + fmt(d.puMean) + '</td></tr>';
+    html += '<tr><td>PEOU (1-4)</td><td>' + d.peou.join(', ') + '</td><td class="num">' + fmt(d.peouMean) + '</td></tr>';
+    html += '<tr><td>Engagement (1-7)</td><td>' + d.engagement.join(', ') + '</td><td class="num">' + fmt(d.engagementMean) + '</td></tr>';
+    if (d.bi) html += '<tr><td>BI (1-3)</td><td>' + d.bi.join(', ') + '</td><td class="num">' + fmt(d.biMean) + '</td></tr>';
+    if (d.le) html += '<tr><td>Learning (1-4)</td><td>' + d.le.join(', ') + '</td><td class="num">' + fmt(d.leMean) + '</td></tr>';
+    if (d.cq) html += '<tr><td>Content Q (1-3)</td><td>' + d.cq.join(', ') + '</td><td class="num">' + fmt(d.cqMean) + '</td></tr>';
+    html += '<tr><td>Quiz</td><td>' + d.quizCorrect + '/' + d.quizTotal + ' correct, ' + d.levelsCompleted + ' levels</td><td class="num">' + d.quizAccuracy + '%</td></tr>';
+    html += '</tbody></table>';
+
+    container.innerHTML = html;
+
+    // Draw individual radar
+    setTimeout(function() {
+        drawRadarChart('chart-individual-radar',
+            ['SUS\n(norm)', 'PU', 'PEOU', 'Engage', 'BI', 'Learning', 'Content Q.'],
+            [d.susScore/20, d.puMean, d.peouMean, d.engagementMean, d.biMean||0, d.leMean||0, d.cqMean||0],
+            5
+        );
+    }, 50);
+}
+
+function scoreRow(label, value, max, color) {
+    var pct = (value / max * 100);
+    var c = color === 'red' ? '#ef4444' : color === 'amber' ? '#f59e0b' : '#16a34a';
+    return '<div style="margin-bottom:6px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>' + label + '</span><strong>' + fmt(value,1) + '/' + max + '</strong></div>' +
+        '<div style="height:6px; background:#e5e7eb; border-radius:3px; overflow:hidden;"><div style="height:100%; width:' + pct + '%; background:' + c + '; border-radius:3px;"></div></div></div>';
 }
 
 function drawHistogram(canvasId, values, xlabel, minVal, maxVal, binSize, color) {
